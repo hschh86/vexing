@@ -1,2 +1,2 @@
 # vexing
-A vexing conundrum.
+adventures in flag manipulation.
