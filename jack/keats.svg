@@ -1,0 +1,127 @@
+<svg
+	id="main_svg_object"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="600" height="300">
+	<defs>
+		<style type="text/css"><![CDATA[
+
+			.baseshape {
+				vector-effect: non-scaling-stroke
+			}
+
+			.star {
+				fill: white;
+			}
+
+			#ausback, #jackback {
+				fill: #002b7f;
+			}
+
+			#andrew, #george_fim {
+				stroke: white;
+			}
+
+			#patrick, #george {
+				stroke: #e8112d;
+			}
+
+			#andrew {
+				stroke-width: 30px;
+			}
+
+			#patrick {
+				stroke-width: 20px;
+			}
+
+			#george_fim {
+				stroke-width: 50px;
+			}
+
+			#george {
+				stroke-width: 30px;
+			}
+
+		]]></style>
+		<path id="xshape"
+			d="M0,0 L100,100 M100,0 L0,100"
+			class="baseshape"/>
+		<path id="tshape"
+			d="M50,0 L50,100 M0,50 L100,50"
+			class="baseshape"/>
+		<clipPath id="ccmask">
+            <polygon id="pinwheel"
+		        points="50,50 0,0 0,50
+		        50,50 0,100 50,100
+		        50,50 100,100 100,50
+		        50,50 100,0 50,0"/>
+		</clipPath>
+		<symbol id="7star" viewBox="-9 -9 18 18">
+			<path d="
+					M 0.0000,-9.0000
+					L 1.7355,-3.6039
+					L 7.0365,-5.6114
+					L 3.8997,-0.8901
+					L 8.7744, 2.0027
+					L 3.1273, 2.4940
+					L 3.9050, 8.1087
+					L 0.0000, 4.0000
+					L-3.9050, 8.1087
+					L-3.1273, 2.4940
+					L-8.7744, 2.0027
+					L-3.8997,-0.8901
+					L-7.0365,-5.6114
+					L-1.7355,-3.6039
+					Z
+			" class="star"/>
+		</symbol>
+		<symbol id="5star" viewBox="-9 -9 18 18">
+			<path d="
+					M 0.0000,-9.0000
+					L 2.3511,-3.2361
+					L 8.5595,-2.7812
+					L 3.8042, 1.2361
+					L 5.2901, 7.2812
+					L 0.0000, 4.0000
+					L-5.2901, 7.2812
+					L-3.8042, 1.2361
+					L-8.5595,-2.7812
+					L-2.3511,-3.2361
+					Z
+			 " class="star" />
+		</symbol>
+	</defs>
+	<rect id="ausback" width="100%" height="100%" />
+	<svg id="unionjack"
+		preserveAspectRatio="none"
+		viewBox="0 0 100 100"
+		x="0%" y="0%" width="50%" height="50%">
+		<rect id="jackback" x="0" y="0" width="100" height="100" />
+		<use id="andrew" xlink:href="#xshape" />
+		<use id="patrick" xlink:href="#xshape" clip-path="url(#ccmask)"/>
+		<use id="george_fim" xlink:href="#tshape" />
+		<use id="george" xlink:href="#tshape" />
+	</svg>
+	<svg id="fedstar"
+		preserveAspectRatio="xMidYMid meet"
+		viewBox="0 0 100 100"
+		x="0%" y="50%" width="50%" height="50%" >
+		<use xlink:href="#7star"
+			x="20" y="20" width="60" height="60"/>
+	</svg>
+	<svg id="crux"
+		preserveAspectRatio="xMidYMid meet"
+		viewBox="-2100 -2520 4200 5040"
+		x="50%" y="0%" width="50%" height="100%">
+		<use id="alpha" xlink:href="#7star"
+			x="-360" y="1320" width="720" height="720"/>
+		<use id="beta" xlink:href="#7star"
+			x="-1620" y="-675" width="720" height="720"/>
+		<use id="gamma" xlink:href="#7star"
+			x="-360" y="-2040" width="720" height="720"/>
+		<use id="delta" xlink:href="#7star"
+			x="760" y="-1011" width="720" height="720"/>
+		<use id="epsilon" xlink:href="#5star"
+			x="294" y="0" width="420" height="420"/>
+	</svg>
+</svg>
