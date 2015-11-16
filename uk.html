@@ -2,37 +2,150 @@
 <html>
  <head>
 	<meta charset='utf-8'>
-	<title>TITLE</title>
+	<title> Union Jack </title>
     <!--
 	<link rel="stylesheet" href="">
 	<script src=""></script>
     -->
+    <script src="scripts/libs/snap/snap.svg-min.js"></script>
+
+
+    <!-- Temporary style. -->
+    <style>
+      #main_svg_object {
+        border: 1px solid black;
+      }
+      body {
+        font-family: sans-serif;
+      }
+    </style>
+
+
  </head>
  <body>
  <!-- Content goes here. -->
-     <h1> UNITED KINGDOM OF GREAT BRITAIN AND NORTHERN IRELAND </h1>
-
+     <h1> united kingdom of great britain and northern ireland </h1>
+     <div id="svgdiv">
+    <svg id="main_svg_object"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    width="600" height="300"
+   </svg>
+ </div>
 
      <h1> Controls go here. </h1>
-     <ul>
-       <li> UNION JACK </li>
-       <li> field </li>
-       <ul>
-         <li> width </li>
-         <li> height </li>
-       <li> cross </li>
+<ul>
+  <li> Size
+    <ul>
+      <li>Ratio:
         <ul>
-          <li> cross </li>
-          <li> fim </li>
+          <li>width</li>
+          <li>height</li>
         </ul>
-       <li> saltire </li>
-       <ul>
-         <li> patrick </li>
-         <li> saltire </li>
-         <li> fim </li>
-         <li> offset x, y </li>
+      </li>
+      <li>unit-scaling</li>
+      <li>Display...</li>
+    </ul>
+  </li>
+  <li> Shape
+    <ul>
+      <li>saltire
+        <ul>
+          <li>Patrick?</li>
+          <li>fim-width</li>
+          <li>width</li>
+          <li>offset</li>
+        </ul>
+      </li>
+      <li>cross
+        <ul>
+          <li>fim-width</li>
+          <li>width</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li>colour
+    <ul>
+      <li>blue</li>
+      <li>red</li>
+      <li>white</li>
+    </ul>
+  </li>
+</ul>
+       <!-- EXPERIMENTS -->
+       <script>
+         console.log("Hello!");
 
-       </ul>
+        // Step 1: Draw the Union Jack.
+        // Grab the svg object we want to draw to.
+         var main = Snap("#main_svg_object");
+
+         // Designate the Flag Zone.
+         var flagzone = main.svg()
+
+         // Designate the Union Jack.
+         var unionjack = flagzone.svg()
+         // Set viewbox. For now...
+         unionjack.attr({
+           viewBox: "-30 -15 60 30"
+         })
+
+         // Draw in the field. Scottish blue, but we'll go for navy.
+         var field = unionjack.rect(-30, -15, 60, 30).attr({
+           id: "field",
+           class: "flag_elem backdrop scottishblue",
+           fill: "navy",
+         });
+
+         // Now do the actual flaggy bits. Let's save the details for later, eh?
+         // For simplicity, ignore any offsets.
+         // First, the fimbriation.
+         // Six units across, and underneath the saltire. Argent.
+         var sfim = unionjack.group(
+           unionjack.line(-30, -15, 30, 15),
+           unionjack.line(30, -15, -30, 15)
+         ).attr({
+           id: "sfim",
+           class: "fim",
+           stroke: "white",
+           strokeWidth: 6,
+         })
+
+         // just to get the feel of the thing
+         unionjack.group(
+           unionjack.line(-30, -15, 30, 15),
+           unionjack.line(30, -15, -30, 15)
+         ).attr({
+           stroke: "red",
+           strokeWidth: 4,
+           clip: unionjack.polyline([
+             0,0, -30,-15, -30,0,
+             0,0, -30,15, 0,15,
+             0,0, 30,15, 30,0,
+             0,0, 30,-15, 0,-15
+           ])
+         })
+         unionjack.group(
+           unionjack.line(-30, 0, 30, 0),
+           unionjack.line(0, -15, 0, 15)
+         ).attr({
+           stroke: "white",
+           strokeWidth: 10
+         })
+         unionjack.group(
+           unionjack.line(-30, 0, 30, 0),
+           unionjack.line(0, -15, 0, 15)
+         ).attr({
+           stroke: "red",
+           strokeWidth: 6
+         })
+
+
+
+
+
+       </script>
 
  </body>
 </html>
