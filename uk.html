@@ -81,26 +81,26 @@
        // Fun With Getters And Setters!
        var f = {
          size: {
-           hWidth: 30,
-           hHeight: 15,
-           get fWidth(){
-             return this.hWidth * 2
+           hFly: 30,
+           hHoist: 15,
+           get fFly(){
+             return this.hFly * 2
            },
-           set fWidth(x){
-             this.hWidth = x/2
+           set fFly(x){
+             this.hFly = x/2
            },
-           get fHeight(){
-             return this.hHeight * 2
+           get fHoist(){
+             return this.hHoist * 2
            },
-           set fHeight(x){
-             this.hHeight = x/2
+           set fHoist(x){
+             this.hHoist = x/2
            }
          },
          saltire: {
            patrick: true,
            backWidth: 6,
            frontWidth: 4,
-           offset: 0,
+           offset: 5,
          },
          cross: {
            backWidth: 10,
@@ -126,33 +126,79 @@
          unionjack = flagzone.svg().attr({
            id: "unionjack",
            // set up the ViewBox so everything works properly!
-           viewBox: [-f.size.hWidth, -f.size.hHeight,
-                      f.size.fWidth,  f.size.fHeight]
+           viewBox: [-f.size.hFly, -f.size.hHoist,
+                      f.size.fFly,  f.size.fHoist]
          });
 
          // Now, for some Geometry.
          // Basic Cross.
          var basicCross = unionjack.g().toDefs().attr({id: "basicCross"});
          // -- Horizontal line
-         basicCross.line(-f.size.hWidth, 0, f.size.hWidth, 0)
-          .attr({id: "basicHLine"});
+         basicCross.line(
+           -f.size.hFly, 0,
+            f.size.hFly, 0
+          ).attr({id: "basicHLine"});
          // -- Vertical line
-         basicCross.line(0, -f.size.hHeight, 0, f.size.hHeight)
-          .attr({id: "basicVLine"});
+         basicCross.line(
+           0, -f.size.hHoist,
+           0, f.size.hHoist
+          ).attr({id: "basicVLine"});
 
          // Saltire Bits.
          // -- for now, just ignore the offset entirely.
          // -- let's go down, and to the right.
-         var basicSBit = unionjack.line(0, 0, f.size.hWidth, f.size.hHeight)
-          .toDefs().attr({id: "basicSBit"});
+         var basicSBit = unionjack.line(
+           f.saltire.offset, -f.saltire.offset,
+           f.size.hFly, f.size.hHoist
+          ).toDefs().attr({id: "basicSBit"});
 
          // How about some boxes?
-         var fullBox = unionjack.rect(-f.size.hWidth, -f.size.hHeight,
-                                       f.size.fWidth,  f.size.fHeight)
-          .toDefs().attr({id: "fullBox"});
+         var fullBox = unionjack.rect(
+           -f.size.hFly, -f.size.hHoist,
+            f.size.fFly,  f.size.fHoist
+          ).toDefs().attr({id: "fullBox"});
 
-         var quarterBox = unionjack.rect(0, 0, f.size.hWidth, f.size.hHeight)
-          .toDefs().attr({id: "quarterBox"});
+         var quarterBox = unionjack.rect(
+           0, 0,
+           f.size.hFly, f.size.hHoist
+          ).toDefs().attr({id: "quarterBox"});
+
+         // We're also gonna need to do some pinwheels.
+         // The offset point: (+f.saltire.offset, -f.saltire.offset)
+         // Moves diagonally along the unit grid.
+
+         var hoistPinwheel = unionjack.polyline(
+           0, 0,
+           f.saltire.offset, -f.saltire.offset,
+           f.size.hFly, f.size.hHoist,
+           f.size.hFly, 0
+          ).toDefs().attr({id: "hoistPinwheel"});
+
+         var flyPinwheel = unionjack.polyline(
+           0, 0,
+           f.saltire.offset, -f.saltire.offset,
+           f.size.hFly, f.size.hHoist,
+           0, f.size.hHoist
+          ).toDefs().attr({id: "flyPinwheel"});
+
+         var backSBit = unionjack.use(basicSBit).toDefs().attr({
+           id: "backSBit",
+           stroke: f.colour.white,
+           strokeWidth: f.saltire.backWidth,
+        //   clip: quarterBox
+         })
+         backSBit.node.setAttribute("clip", "url(#quarterBox)");
+
+         var frontSBit = unionjack.use(basicSBit).toDefs().attr({
+           id: "frontSBit",
+           stroke: f.colour.red,
+           strokeWidth: f.saltire.frontWidth,
+         });
+
+
+
+
+
 
          // For the moment, let's pretend it's 1707.
 
@@ -161,15 +207,37 @@
            id: "field",
            class: "scottishblue backdrop",
            fill: f.colour.blue,
+         });
+
+         unionjack.use(backSBit);
+         unionjack.use(backSBit).transform('s-1,1');
+         unionjack.use(backSBit).transform('s-1,-1');
+         unionjack.use(backSBit).transform('s1,-1');
+
+         var flySBit = unionjack.use(frontSBit).attr({
+           //clip: unionjack.use
          })
 
-         var TEMPSCOT = unionjack.use(basicSBit).attr({
-           stroke: f.colour.white,
-           strokeWidth: f.saltire.backWidth,
-         }).clone().transform('s-1').clone().transform('s1,-1').clone().transform('s-1,1')
+
+         // NOTE:
+         // Snap.svg doesn't really support re-using clipPath elements.
+         // There are several options to go from here:
+         // 1) create duplicates with clipPath: paper.use()...
+         //    Dunno. seems wasteful.
+         // 2) use masks instead. Not a bad option, and probably the way
+         //    you're supposed to use snap.svg in the first place.
+         // 3) monkey-patch some functionality in. A good "learning experience",
+         //    but probably not the most sustainable option. Sounds fun...
 
 
 
+
+
+
+
+
+
+/*
          var backCross = unionjack.use(basicCross).attr({
            id: "fimCross",
            class: "fimbriaton",
@@ -182,6 +250,7 @@
            stroke: f.colour.red,
            strokeWidth: f.cross.frontWidth
          })
+         */
        }
 
        return {
