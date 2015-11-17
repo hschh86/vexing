@@ -9,7 +9,6 @@
     -->
     <script src="scripts/libs/snap/snap.svg-min.js"></script>
 
-
     <!-- Temporary style. -->
     <style>
       #main_svg_object {
@@ -20,20 +19,18 @@
       }
     </style>
 
-
  </head>
  <body>
- <!-- Content goes here. -->
-     <h1> united kingdom of great britain and northern ireland </h1>
+ <h1> united kingdom of great britain and northern ireland </h1>
      <div id="svgdiv">
     <svg id="main_svg_object"
-    xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    width="600" height="300"
+         xmlns="http://www.w3.org/2000/svg"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         width="600" height="300"
    </svg>
  </div>
 
-     <h1> Controls go here. </h1>
+<h1> Controls go here. </h1>
 <ul>
   <li> Size
     <ul>
@@ -73,79 +70,131 @@
     </ul>
   </li>
 </ul>
-       <!-- EXPERIMENTS -->
-       <script>
-         console.log("Hello!");
+   <script>
+     console.log("Hello!");
+     var Vexing = (function() {
+       'use strict';
+       // Declare the stuff we want.
+       var mainsvg, flagzone, unionjack;
 
-        // Step 1: Draw the Union Jack.
-        // Grab the svg object we want to draw to.
-         var main = Snap("#main_svg_object");
+       // Compartmentalise some functions in an object...
+       // Fun With Getters And Setters!
+       var f = {
+         size: {
+           hWidth: 30,
+           hHeight: 15,
+           get fWidth(){
+             return this.hWidth * 2
+           },
+           set fWidth(x){
+             this.hWidth = x/2
+           },
+           get fHeight(){
+             return this.hHeight * 2
+           },
+           set fHeight(x){
+             this.hHeight = x/2
+           }
+         },
+         saltire: {
+           patrick: true,
+           backWidth: 6,
+           frontWidth: 4,
+           offset: 0,
+         },
+         cross: {
+           backWidth: 10,
+           frontWidth: 6,
+         },
+         colour: {
+           red: "red",
+           blue: "navy",
+           white: "white"
+         }
+       }
 
-         // Designate the Flag Zone.
-         var flagzone = main.svg()
+       var initialise = function () {
+         // Step 1: Grab some References
+         // Grab the mainsvg
+         mainsvg = Snap('#main_svg_object');
+         // We want some sort of Flag Zone within it...
+         // to contain the flag.
+         flagzone = mainsvg.svg().attr({id: "flagzone"});
 
-         // Designate the Union Jack.
-         var unionjack = flagzone.svg()
-         // Set viewbox. For now...
-         unionjack.attr({
-           viewBox: "-30 -15 60 30"
-         })
-
-         // Draw in the field. Scottish blue, but we'll go for navy.
-         var field = unionjack.rect(-30, -15, 60, 30).attr({
-           id: "field",
-           class: "flag_elem backdrop scottishblue",
-           fill: "navy",
+         // Step 2: DRAW THE UNION JACK
+         // Within this Flag Zone we want to designate the area for our UJ.
+         unionjack = flagzone.svg().attr({
+           id: "unionjack",
+           // set up the ViewBox so everything works properly!
+           viewBox: [-f.size.hWidth, -f.size.hHeight,
+                      f.size.fWidth,  f.size.fHeight]
          });
 
-         // Now do the actual flaggy bits. Let's save the details for later, eh?
-         // For simplicity, ignore any offsets.
-         // First, the fimbriation.
-         // Six units across, and underneath the saltire. Argent.
-         var sfim = unionjack.group(
-           unionjack.line(-30, -15, 30, 15),
-           unionjack.line(30, -15, -30, 15)
-         ).attr({
-           id: "sfim",
-           class: "fim",
-           stroke: "white",
-           strokeWidth: 6,
+         // Now, for some Geometry.
+         // Basic Cross.
+         var basicCross = unionjack.g().toDefs().attr({id: "basicCross"});
+         // -- Horizontal line
+         basicCross.line(-f.size.hWidth, 0, f.size.hWidth, 0)
+          .attr({id: "basicHLine"});
+         // -- Vertical line
+         basicCross.line(0, -f.size.hHeight, 0, f.size.hHeight)
+          .attr({id: "basicVLine"});
+
+         // Saltire Bits.
+         // -- for now, just ignore the offset entirely.
+         // -- let's go down, and to the right.
+         var basicSBit = unionjack.line(0, 0, f.size.hWidth, f.size.hHeight)
+          .toDefs().attr({id: "basicSBit"});
+
+         // How about some boxes?
+         var fullBox = unionjack.rect(-f.size.hWidth, -f.size.hHeight,
+                                       f.size.fWidth,  f.size.fHeight)
+          .toDefs().attr({id: "fullBox"});
+
+         var quarterBox = unionjack.rect(0, 0, f.size.hWidth, f.size.hHeight)
+          .toDefs().attr({id: "quarterBox"});
+
+         // For the moment, let's pretend it's 1707.
+
+         // Do Some Art!
+         var field = unionjack.use(fullBox).attr({
+           id: "field",
+           class: "scottishblue backdrop",
+           fill: f.colour.blue,
          })
 
-         // just to get the feel of the thing
-         unionjack.group(
-           unionjack.line(-30, -15, 30, 15),
-           unionjack.line(30, -15, -30, 15)
-         ).attr({
-           stroke: "red",
-           strokeWidth: 4,
-           clip: unionjack.polyline([
-             0,0, -30,-15, -30,0,
-             0,0, -30,15, 0,15,
-             0,0, 30,15, 30,0,
-             0,0, 30,-15, 0,-15
-           ])
+         var TEMPSCOT = unionjack.use(basicSBit).attr({
+           stroke: f.colour.white,
+           strokeWidth: f.saltire.backWidth,
+         }).clone().transform('s-1').clone().transform('s1,-1').clone().transform('s-1,1')
+
+
+
+         var backCross = unionjack.use(basicCross).attr({
+           id: "fimCross",
+           class: "fimbriaton",
+           stroke: f.colour.white,
+           strokeWidth: f.cross.backWidth
          })
-         unionjack.group(
-           unionjack.line(-30, 0, 30, 0),
-           unionjack.line(0, -15, 0, 15)
-         ).attr({
-           stroke: "white",
-           strokeWidth: 10
+         var frontCross = unionjack.use(basicCross).attr({
+           id: "mainCross",
+           class: "jackred",
+           stroke: f.colour.red,
+           strokeWidth: f.cross.frontWidth
          })
-         unionjack.group(
-           unionjack.line(-30, 0, 30, 0),
-           unionjack.line(0, -15, 0, 15)
-         ).attr({
-           stroke: "red",
-           strokeWidth: 6
-         })
+       }
+
+       return {
+         initialise: initialise,
+       }
+     }());
+
+     window.onload = function () {
+       Vexing.initialise();
+     }
 
 
-
-
-
-       </script>
+   </script>
 
  </body>
 </html>
