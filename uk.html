@@ -131,6 +131,18 @@
          });
 
          // Now, for some Geometry.
+
+         // NOTE:
+         // Snap.svg doesn't really support re-using clipPath elements.
+         // There are several options to go from here:
+         // 1) create duplicates with clipPath: paper.use()...
+         //    Dunno. seems wasteful.
+         // 2) use masks instead. Not a bad option, and probably the way
+         //    you're supposed to use snap.svg in the first place.
+         // 3) monkey-patch some functionality in. A good "learning experience",
+         //    but probably not the most sustainable option. Sounds fun...
+
+
          // Basic Cross.
          var basicCross = unionjack.g().toDefs().attr({id: "basicCross"});
          // -- Horizontal line
@@ -185,14 +197,15 @@
            id: "backSBit",
            stroke: f.colour.white,
            strokeWidth: f.saltire.backWidth,
-        //   clip: quarterBox
+           clip: quarterBox
          })
-         backSBit.node.setAttribute("clip", "url(#quarterBox)");
+         //backSBit.node.setAttribute("clip", "url(#quarterBox)");
 
          var frontSBit = unionjack.use(basicSBit).toDefs().attr({
            id: "frontSBit",
            stroke: f.colour.red,
            strokeWidth: f.saltire.frontWidth,
+           clip: unionjack.use(quarterBox)
          });
 
 
@@ -209,25 +222,19 @@
            fill: f.colour.blue,
          });
 
-         unionjack.use(backSBit);
+         unionjack.use(backSBit)
+         unionjack.use(frontSBit)
+
+         /*
          unionjack.use(backSBit).transform('s-1,1');
          unionjack.use(backSBit).transform('s-1,-1');
          unionjack.use(backSBit).transform('s1,-1');
 
          var flySBit = unionjack.use(frontSBit).attr({
            //clip: unionjack.use
-         })
+         })*/
 
 
-         // NOTE:
-         // Snap.svg doesn't really support re-using clipPath elements.
-         // There are several options to go from here:
-         // 1) create duplicates with clipPath: paper.use()...
-         //    Dunno. seems wasteful.
-         // 2) use masks instead. Not a bad option, and probably the way
-         //    you're supposed to use snap.svg in the first place.
-         // 3) monkey-patch some functionality in. A good "learning experience",
-         //    but probably not the most sustainable option. Sounds fun...
 
 
 
