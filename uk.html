@@ -17,6 +17,13 @@
       body {
         font-family: sans-serif;
       }
+
+
+      /* Mask rules. */
+      .solidmask {
+        stroke: none;
+        fill: white;
+      }
     </style>
 
  </head>
@@ -26,7 +33,7 @@
     <svg id="main_svg_object"
          xmlns="http://www.w3.org/2000/svg"
          xmlns:xlink="http://www.w3.org/1999/xlink"
-         width="600" height="300"
+         width="600" height="300" >
    </svg>
  </div>
 
@@ -71,7 +78,6 @@
   </li>
 </ul>
    <script>
-     console.log("Hello!");
      var Vexing = (function() {
        'use strict';
        // Declare the stuff we want.
@@ -100,7 +106,7 @@
            patrick: true,
            backWidth: 6,
            frontWidth: 4,
-           offset: 5,
+           offset: 0,
          },
          cross: {
            backWidth: 10,
@@ -132,16 +138,6 @@
 
          // Now, for some Geometry.
 
-         // NOTE:
-         // Snap.svg doesn't really support re-using clipPath elements.
-         // There are several options to go from here:
-         // 1) create duplicates with clipPath: paper.use()...
-         //    Dunno. seems wasteful.
-         // 2) use masks instead. Not a bad option, and probably the way
-         //    you're supposed to use snap.svg in the first place.
-         // 3) monkey-patch some functionality in. A good "learning experience",
-         //    but probably not the most sustainable option. Sounds fun...
-
 
          // Basic Cross.
          var basicCross = unionjack.g().toDefs().attr({id: "basicCross"});
@@ -162,54 +158,86 @@
          var basicSBit = unionjack.line(
            f.saltire.offset, -f.saltire.offset,
            f.size.hFly, f.size.hHoist
-          ).toDefs().attr({id: "basicSBit"});
+         ).toDefs().attr({id: "basicSBit"});
+
+
 
          // How about some boxes?
-         var fullBox = unionjack.rect(
+         var fullMask = unionjack.mask().attr({
+           // BUG: You cannot use a mask with an ID set manually.
+           //id: "fullMask",
+           class: "solidmask"
+         })
+         var fullBox = fullMask.rect(
            -f.size.hFly, -f.size.hHoist,
             f.size.fFly,  f.size.fHoist
-          ).toDefs().attr({id: "fullBox"});
+          ).attr({id: "fullBox"});
 
-         var quarterBox = unionjack.rect(
+
+          var quarterMask = unionjack.mask().attr({
+            //id: "quarterMask",
+            class: "solidmask",
+          });
+         var quarterBox = quarterMask.rect(
            0, 0,
            f.size.hFly, f.size.hHoist
-          ).toDefs().attr({id: "quarterBox"});
+         ).attr({id: "quarterBox"});
+
+
+
+
+
+
+
 
          // We're also gonna need to do some pinwheels.
          // The offset point: (+f.saltire.offset, -f.saltire.offset)
          // Moves diagonally along the unit grid.
 
-         var hoistPinwheel = unionjack.polyline(
+         var hoistPMask = unionjack.mask().attr({
+           //id: "hoistPMask",
+           class: "solidmask"
+         });
+         var hoistPinwheel = hoistPMask.polyline(
            0, 0,
            f.saltire.offset, -f.saltire.offset,
            f.size.hFly, f.size.hHoist,
            f.size.hFly, 0
-          ).toDefs().attr({id: "hoistPinwheel"});
+          ).attr({
+            id: "hoistPinwheel",
+            mask: quarterMask,
+          });
 
-         var flyPinwheel = unionjack.polyline(
+        var flyPMask = unionjack.mask().attr({
+          //id: "flyPMask",
+          class: "solidmask"
+        });
+
+         var flyPinwheel = flyPMask.polyline(
            0, 0,
            f.saltire.offset, -f.saltire.offset,
            f.size.hFly, f.size.hHoist,
            0, f.size.hHoist
-          ).toDefs().attr({id: "flyPinwheel"});
+          ).attr({
+            id: "flyPinwheel",
+            mask: quarterMask,
+          });
+
+
+
 
          var backSBit = unionjack.use(basicSBit).toDefs().attr({
            id: "backSBit",
            stroke: f.colour.white,
            strokeWidth: f.saltire.backWidth,
-           clip: quarterBox
+           mask: quarterMask
          })
-         //backSBit.node.setAttribute("clip", "url(#quarterBox)");
 
          var frontSBit = unionjack.use(basicSBit).toDefs().attr({
            id: "frontSBit",
            stroke: f.colour.red,
            strokeWidth: f.saltire.frontWidth,
-           clip: unionjack.use(quarterBox)
          });
-
-
-
 
 
 
@@ -220,31 +248,21 @@
            id: "field",
            class: "scottishblue backdrop",
            fill: f.colour.blue,
+
          });
 
          unionjack.use(backSBit)
-         unionjack.use(frontSBit)
+         .clone().transform('s-1,1')
+        .clone().transform('s-1,-1')
+         .clone().transform('s1,-1');
 
-         /*
-         unionjack.use(backSBit).transform('s-1,1');
-         unionjack.use(backSBit).transform('s-1,-1');
-         unionjack.use(backSBit).transform('s1,-1');
+         unionjack.use(frontSBit).attr({mask: hoistPMask})
+         .clone().transform('s-1,-1')
 
-         var flySBit = unionjack.use(frontSBit).attr({
-           //clip: unionjack.use
-         })*/
-
+         unionjack.use(frontSBit).attr({mask: flyPMask}).transform('s-1,1')
+         .clone().transform('s1,-1')
 
 
-
-
-
-
-
-
-
-
-/*
          var backCross = unionjack.use(basicCross).attr({
            id: "fimCross",
            class: "fimbriaton",
@@ -257,7 +275,7 @@
            stroke: f.colour.red,
            strokeWidth: f.cross.frontWidth
          })
-         */
+
        }
 
        return {
