@@ -119,6 +119,53 @@
          }
        }
 
+       // Now, let's attempt to do some OO.
+       // I don't actually know how to do this,
+       // but it's worth a shot, hey?
+
+       // It seems like there's a lot of lines. Let's encapsulate.
+       var SVGNS = "http://www.w3.org/2000/svg";
+
+
+
+       var Fline = (function() {
+         // trying out using iifes to encapsulate.
+         function Fline () {
+         };
+         Fline.prototype.newEl = function (node) {
+           if (typeof node === "undefined") {
+             node = document.createElementNS(SVGNS, "line");
+           };
+           this.el = Snap(node);
+         };
+         Fline.prototype.setStart = function (x1, y1) {
+           this.el.attr({
+             x1:x1,
+             y1:y1
+           })
+         }
+         Fline.prototype.setEnd = function (x2, y2) {
+           this.el.attr({
+             x2:x2,
+             y2:y2
+           })
+         }
+         Fline.prototype.setWidth = function (width) {
+           this.el.attr({
+             strokeWidth: width
+           })
+         }
+         Fline.prototype.setColour = function (colour) {
+           this.el.attr({
+             stroke: colour
+           })
+         }
+
+         return Fline;
+       }());
+
+
+
        var initialise = function () {
          // Step 1: Grab some References
          // Grab the mainsvg
@@ -280,6 +327,7 @@
 
        return {
          initialise: initialise,
+         Fline: Fline,
        }
      }());
 
