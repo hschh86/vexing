@@ -132,35 +132,30 @@
          // trying out using iifes to encapsulate.
          function Fline () {
          };
-         Fline.prototype.newEl = function (node) {
+         Fline.prototype.newNode = function (node) {
            if (typeof node === "undefined") {
              node = document.createElementNS(SVGNS, "line");
            };
+           this.node = node;
            this.el = Snap(node);
          };
          Fline.prototype.setStart = function (x1, y1) {
-           this.el.attr({
-             x1:x1,
-             y1:y1
-           })
+           this.node.setAttribute("x1", x1);
+           this.node.setAttribute("y1", y1);
          }
          Fline.prototype.setEnd = function (x2, y2) {
-           this.el.attr({
-             x2:x2,
-             y2:y2
-           })
+           this.node.setAttribute("x2", x2);
+           this.node.setAttribute("y2", y2);
          }
          Fline.prototype.setWidth = function (width) {
-           this.el.attr({
-             strokeWidth: width
-           })
+           this.node.setAttribute("stroke-width", width);
          }
          Fline.prototype.setColour = function (colour) {
-           this.el.attr({
-             stroke: colour
-           })
+           this.node.setAttribute("stroke", colour);
          }
-
+         Fline.prototype.appendToNode = function (parent) {
+           parent.appendChild(this.node);
+         }
          return Fline;
        }());
 
