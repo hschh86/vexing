@@ -132,29 +132,51 @@
          // trying out using iifes to encapsulate.
          function Fline () {
          };
+
+         var AttributeMap = {
+           "x1": "x1",
+           "y1": "y1",
+           "x2": "x2",
+           "y2": "y2",
+           "width": "stroke-width",
+           "colour": "stroke"
+         }
+
+         Fline.prototype.setVal = function (name, value) {
+           var attr = AttributeMap[name] || name;
+           this[name] = value;
+           this.node.setAttribute(attr, value);
+           return this;
+         }
+
          Fline.prototype.newNode = function (node) {
            if (typeof node === "undefined") {
              node = document.createElementNS(SVGNS, "line");
            };
            this.node = node;
            this.el = Snap(node);
-         };
+         }
          Fline.prototype.setStart = function (x1, y1) {
-           this.node.setAttribute("x1", x1);
-           this.node.setAttribute("y1", y1);
+           this.setVal("x1", x1);
+           this.setVal("y1", y1);
+           return this;
          }
          Fline.prototype.setEnd = function (x2, y2) {
-           this.node.setAttribute("x2", x2);
-           this.node.setAttribute("y2", y2);
+           this.setVal("x2", x2);
+           this.setVal("y2", y2);
+           return this;
          }
          Fline.prototype.setWidth = function (width) {
-           this.node.setAttribute("stroke-width", width);
+           this.setVal("width", width);
+           return this;
          }
          Fline.prototype.setColour = function (colour) {
-           this.node.setAttribute("stroke", colour);
+           this.setVal("colour", colour);
+           return this;
          }
          Fline.prototype.appendToNode = function (parent) {
            parent.appendChild(this.node);
+           return this;
          }
          return Fline;
        }());
