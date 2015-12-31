@@ -123,62 +123,129 @@
        // I don't actually know how to do this,
        // but it's worth a shot, hey?
 
-       // It seems like there's a lot of lines. Let's encapsulate.
        var SVGNS = "http://www.w3.org/2000/svg";
 
 
+       var Fshape = (function() {
+         function Fshape () {
+
+         };
+
+         var p = Fshape.prototype;
+
+
+         p.newNode = function (node) {
+           if (typeof node === "undefined") {
+             node = this.newSVGElement();
+           };
+           this.node = node;
+           this.el = Snap(node);
+           return this;
+         };
+
+         p.newSVGElement = function () {
+           return document.createElementNS(SVGNS, this.svgtag);
+         }
+
+         p.setVal = function (name, value) {
+           var attr = this.AttributeMap[name] || name;
+           this[name] = value;
+           this.node.setAttribute(attr, value);
+           return this;
+         };
+
+         p.appendToNode = function (parent) {
+           parent.appendChild(this.node);
+           return this;
+         }
+
+         return Fshape;
+       }());
 
        var Fline = (function() {
          // trying out using iifes to encapsulate.
          function Fline () {
+           //Fshape.call(this);
          };
 
-         var AttributeMap = {
-           "x1": "x1",
-           "y1": "y1",
-           "x2": "x2",
-           "y2": "y2",
-           "width": "stroke-width",
-           "colour": "stroke"
+         Fline.prototype = Object.create(Fshape.prototype);
+         Fline.prototype.constructor = Fline;
+
+
+         var p = Fline.prototype;
+
+
+         // It's possible to do some sort of sub-inheritance
+         // I'm not sure if this is a good idea or not.
+         // or even if the pseudoclassical way I'm doing this is even
+         // good at all. Maybe I should try to do it while only using
+         // Object.create and the object property thingies.
+         //
+         // p.props = Object.create(Fshape.prototype.props)
+
+
+         p.AttributeMap = {
+             "x1": "x1",
+             "y1": "y1",
+             "x2": "x2",
+             "y2": "y2",
+             "width": "stroke-width",
+             "colour": "stroke"
+          };
+         p.svgtag = "line";
+
+         p.setStart = function (x1, y1) {
+           return this.setVal("x1", x1).setVal("y1", y1);
+         }
+         p.setEnd = function (x2, y2) {
+           return this.setVal("x2", x2).setVal("y2", y2);
+         }
+         p.setWidth = function (width) {
+           return this.setVal("width", width);
+         }
+         p.setColour = function (colour) {
+           return this.setVal("colour", colour);
          }
 
-         Fline.prototype.setVal = function (name, value) {
-           var attr = AttributeMap[name] || name;
-           this[name] = value;
-           this.node.setAttribute(attr, value);
-           return this;
-         }
-
-         Fline.prototype.newNode = function (node) {
-           if (typeof node === "undefined") {
-             node = document.createElementNS(SVGNS, "line");
-           };
-           this.node = node;
-           this.el = Snap(node);
-         }
-         Fline.prototype.setStart = function (x1, y1) {
-           this.setVal("x1", x1);
-           this.setVal("y1", y1);
-           return this;
-         }
-         Fline.prototype.setEnd = function (x2, y2) {
-           this.setVal("x2", x2);
-           this.setVal("y2", y2);
-           return this;
-         }
-         Fline.prototype.setWidth = function (width) {
-           this.setVal("width", width);
-           return this;
-         }
-         Fline.prototype.setColour = function (colour) {
-           this.setVal("colour", colour);
-           return this;
-         }
-         Fline.prototype.appendToNode = function (parent) {
-           parent.appendChild(this.node);
-           return this;
-         }
          return Fline;
+       }());
+
+       var Frect = (function() {
+         function Frect () {
+
+         };
+         Frect.prototype = Object.create(Fshape.prototype);
+         var p = Frect.prototype;
+         p.constructor = Frect;
+         // I suppose var p = Frect.prototype = Object.create(..) also works
+         p.AttributeMap = {
+             "x": "x",
+             "y": "y",
+             "width": "width",
+             "height": "height",
+             "colour": "fill"
+          };
+         p.svgtag = "rect";
+
+         p.setLocation = function (x, y) {
+           return this.setVal("x", x).setVal("y", y);
+         }
+         p.setSize = function (w, h) {
+           return this.setVal("width", w).setVal("height", h);
+         }
+         p.setColour = function (colour) {
+           return this.setVal("colour", colour);
+         }
+
+         p.setExtent = function (x1, y1, x2, y2) {
+           var xmin = Math.min(x1, x2),
+               ymin = Math.min(y1, y2),
+               xdif = Math.abs(x1 - x2),
+               ydif = Math.abs(y1 - y2);
+           return this.setLocation(xmin, ymin).setSize(xdif, ydif);
+         }
+
+        return Frect;
        }());
 
 
