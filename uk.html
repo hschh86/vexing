@@ -123,7 +123,46 @@
        // I don't actually know how to do this,
        // but it's worth a shot, hey?
 
+
+
        var SVGNS = "http://www.w3.org/2000/svg";
+
+       var Felement = (function() {
+         // A Felement contains an SVG Element. Very basic thing.
+         // Creating a Felement also creates an SVG Element.
+         function Felement (tag) {
+           this.createNode(tag);
+           this.children = [];
+         }
+         var p = Felement.prototype;
+         p.constructor = Felement;
+         // Is setting the constructor even necessary? I don't know.
+
+         p.createNode = function (tag) {
+           // creates a new SVG Element, which can be accessed using this.node
+           this.node = document.createElementNS(SVGNS, tag);
+         }
+
+         p.append = function (child) {
+           // appends another Felement.
+           // It might be a good idea to do some sort of
+           // child instanceof Felement check here.
+           this.node.appendChild(child.node);
+
+
+           this.children.push(child);
+         }
+
+         p.appendTo = function (parent) {
+           parent.node.appendChild(this.node);
+         }
+
+         p.appendToNode = function (parentnode) {
+           parentnode.appendChild(this.node);
+         }
+
+         return Felement;
+       }());
 
 
        var Fshape = (function() {
@@ -139,7 +178,7 @@
              node = this.newSVGElement();
            };
            this.node = node;
-           this.el = Snap(node);
+           //this.el = Snap(node);
            return this;
          };
 
@@ -153,6 +192,13 @@
            this.node.setAttribute(attr, value);
            return this;
          };
+
+         // this might be better done with the SVG DOM API instead.
+         // such as Element.height.baseval.value = x
+         // instead of Element.setAttribute("height", x).
+         // At least the reading gives you proper numbers.
+         // It would require more complex mapping to attributes, though.
+         // Maybe one for SVGLength, one for style.color etc?
 
          p.appendToNode = function (parent) {
            parent.appendChild(this.node);
@@ -212,7 +258,7 @@
 
        var Frect = (function() {
          function Frect () {
-
+           //return this;
          };
          Frect.prototype = Object.create(Fshape.prototype);
          var p = Frect.prototype;
@@ -247,6 +293,27 @@
 
         return Frect;
        }());
+
+
+       // Doing things "properly" has never really been my strong point.
+
+       /*
+       Rough outline of how this structure works (or doesn't work).
+       PRIMITIVE SHAPES. Basically, lines and rectangles. Wrap SVG shapes.
+       GRAPHIC ELEMENTS. Represent crosses, saltires etc. Wrap SVG groups.
+       FLAG STRUCTURE. Represents the whole flag. Also wraps SVG groups.
+           - contains GElements, which countain PShapes.
+           GElements can also contain GElements...
+
+           You know what, this doesn't actually make any sense.
+
+
+
+
+
+
+
+       */
 
 
 
