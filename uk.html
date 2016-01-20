@@ -204,11 +204,35 @@
            )
          }
 
+         var coercedDescriptor = function (descriptor, coercers) {
+           // COMPLETELY UNNECESSARY, BUT LET'S DO IT ANYWAY!
+           var getfunc = descriptor.get;
+           var setfunc = descriptor.set;
+           var getcoercer = coercers.get;
+           var setcoercer = coercers.set;
+           return gsDescriptor(
+             // get
+             function () { return getcoercer(getfunc.call(this))},
+             // set
+             function (x) { return setfunc.call(this, setcoercer(x))}
+           )
+         }
+
+         var coercedDescriptorMaker = function (descriptorMaker, coercers) {
+           // Definetely gone too deep. Somebody stop me.
+           return (function (property) {
+             return coercedDescriptor(descriptorMaker(property), coercers);
+           });
+         }
+
 
          var gsSingle = function (descriptorMaker) {
            // descriptorMaker: function (property)
-           return (function (prototype, property, alias) {
+           return (function (prototype, property, alias, coercers) {
              alias = alias || property;
+             if (coercers) {
+               descriptorMaker = coercedDescriptorMaker(descriptorMaker, coercers);
+             };
              Object.defineProperty(prototype, alias, descriptorMaker(property));
            });
          }
@@ -270,7 +294,16 @@
          // SVGAnimatedLengths: x1, x2, y1, y2
          FMixin.Lengths(p, 'x1', 'x2', 'y1', 'y2')
          // CSS Styles: stroke (as colour), strokeWidth (as width)
-         FMixin.Styles(p, {stroke: "colour", strokeWidth: "width"})
+         //FMixin.Styles(p, {stroke: "colour", strokeWidth: "width"})
+
+         FMixin.Style(p, "stroke", "colour");
+
+         // I'm not sure if using the direct result from style.strokeWidth
+         // is the best option as it returns a string. Maybe a cast is better
+
+         FMixin.Style(p, "strokeWidth", "width", {get: Number, set: Number});
+         // I've fiddled around with the FMixin thing so it can accept a
+         // coercer function.
 
          p.setStart = function (x, y) {
            this.x1 = x;
