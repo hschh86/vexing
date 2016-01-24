@@ -170,105 +170,70 @@
          return Felement;
        }());
 
-       var FMixin = (function() {
+       var FDescriptor = (function() {
 
          // This part is totally unnecessary, but then again, so is this whole project.
 
          // I've gone too deep.
 
+         var descriptorProto = {
+           configurable: true,
+           enumerable: false
+         }
 
-         var gsDescriptor = function (g, s) {
+         var lengthFactory = function (property) {
            return {
-             configurable: true,
-             enumerable: false,
-             get: g,
-             set: s,
+             get: function () { return this.node[property].baseVal.value },
+             set: function (x) { return this.node[property].baseVal.value = x }
+           )
+         }
+
+         var styleFactory = function (property) {
+           return {
+             get: function () { return this.node.style[property] },
+             set: function (x) { return this.node.style[property] = x }
            }
          }
 
-         var gsLengthDescriptor = function (property) {
-           return gsDescriptor(
-             // get
-             function () { return this.node[property].baseVal.value },
-             // set
-             function (x) { return this.node[property].baseVal.value = x }
-           )
+         var attrFactory = function (property) {
+           return {
+             get: function () { return this.node.getAttribute(property) },
+             set: function (x) { return this.node.setAttribute(property, x)}
+           }
          }
 
-         var gsStyleDescriptor = function (property) {
-           return gsDescriptor(
-             // get
-             function () { return this.node.style[property] },
-             // set
-             function (x) { return this.node.style[property] = x }
-           )
-         }
-
-         var coercedDescriptor = function (descriptor, coercers) {
-           // COMPLETELY UNNECESSARY, BUT LET'S DO IT ANYWAY!
-           var getfunc = descriptor.get;
-           var setfunc = descriptor.set;
-           var getcoercer = coercers.get;
-           var setcoercer = coercers.set;
-           return gsDescriptor(
-             // get
-             function () { return getcoercer(getfunc.call(this))},
-             // set
-             function (x) { return setfunc.call(this, setcoercer(x))}
-           )
-         }
-
-         var coercedDescriptorMaker = function (descriptorMaker, coercers) {
-           // Definetely gone too deep. Somebody stop me.
-           return (function (property) {
-             return coercedDescriptor(descriptorMaker(property), coercers);
-           });
-         }
-
-
-         var gsSingle = function (descriptorMaker) {
-           // descriptorMaker: function (property)
-           return (function (prototype, property, alias, coercers) {
-             alias = alias || property;
-             if (coercers) {
-               descriptorMaker = coercedDescriptorMaker(descriptorMaker, coercers);
-             };
-             Object.defineProperty(prototype, alias, descriptorMaker(property));
-           });
-         }
-
-
-         var gsMultiples = function (descriptorMaker) {
-           // descriptorMaker: function (property)
-           return (function (prototype ) { // more arguments follow
-           // the rest of the arguments can be strings or {property:alias}.
-
-           // I could use Object.defineProperties here, but that requires
-           // building another object and I'm lazy.
-             for (var i=1; i<arguments.length; i++) { // start at 1
-               var item = arguments[i];
-               if (typeof item === "string") {
-                 Object.defineProperty(prototype, item, descriptorMaker(item));
-               } else if (typeof item === "object") {
-                 for (var property in item) {
-                   Object.defineProperty(prototype, item[property], descriptorMaker(property));
-                 }
+         var makeDescriptor = function (accessor, coercers) {
+           var descriptor = Object.create(descriptorProto);
+           descriptor.get = accessor.get;
+           descriptor.set = accessor.set;
+           if (coercers) {
+             if (coercers.get) {
+               descriptor.get = function () {
+                 return coercers.get(accessor.get.call(this));
                }
-             }
+             };
+             if (coercers.set) {
+               descriptor.set = function (x) {
+                 return accessor.set.call(this, coercers.set(x));
+               }
+             };
+           };
+           return descriptor;
+         }
+
+         var descriptorMaker = function (factory) {
+           return (function (property, coercers) {
+             return makeDescriptor(factory(property), coercers);
            });
          }
 
-         // I could do some prototype inheritance thing to make it
-         // look like gsLength.single(), but then that would just
-         // confuse me.
+
 
          return {
-           Length: gsSingle(gsLengthDescriptor),
-           Lengths: gsMultiples(gsLengthDescriptor),
-           Style: gsSingle(gsStyleDescriptor),
-           Styles: gsMultiples(gsStyleDescriptor),
+           length: descriptorMaker(lengthFactory),
+           style: descriptorMaker(styleFactory),
+           attribute: descriptorMaker(attrFactory)
          }
-
        }());
 
 
@@ -290,20 +255,14 @@
            Fshape.call(this, "line");
          };
          // extends Fshape
-         var p = Fline.prototype = Object.create(Fshape.prototype);
-         // SVGAnimatedLengths: x1, x2, y1, y2
-         FMixin.Lengths(p, 'x1', 'x2', 'y1', 'y2')
-         // CSS Styles: stroke (as colour), strokeWidth (as width)
-         //FMixin.Styles(p, {stroke: "colour", strokeWidth: "width"})
-
-         FMixin.Style(p, "stroke", "colour");
-
-         // I'm not sure if using the direct result from style.strokeWidth
-         // is the best option as it returns a string. Maybe a cast is better
-
-         FMixin.Style(p, "strokeWidth", "width", {get: Number, set: Number});
-         // I've fiddled around with the FMixin thing so it can accept a
-         // coercer function.
+         var p = Fline.prototype = Object.create(Fshape.prototype, {
+           x1: FDescriptor.length('x1'),
+           x2: FDescriptor.length('x2'),
+           y1: FDescriptor.length('y1'),
+           y2: FDescriptor.length('y2'),
+           colour: FDescriptor.style('stroke'),
+           width: FDescriptor.style('strokeWidth', {get: Number, set: Number})
+         });
 
          p.setStart = function (x, y) {
            this.x1 = x;
@@ -327,12 +286,13 @@
            Fshape.call(this, 'rect');
          };
          // Extends Fshape
-         var p = Frect.prototype = Object.create(Fshape.prototype);
-
-         // SVGAnimatedLengths: x, y, width, height
-         FMixin.Lengths(p, 'x', 'y', 'width', 'height');
-         // Styles: fill (as colour)
-         FMixin.Style(p, 'fill', 'colour');
+         var p = Frect.prototype = Object.create(Fshape.prototype , {
+           x: FDescriptor.length('x'),
+           y: FDescriptor.length('y'),
+           width: FDescriptor.length('width'),
+           height: FDescriptor.length('height'),
+           colour: FDescriptor.style('fill')
+         });
 
 
          p.setLocation = function (x, y) {
