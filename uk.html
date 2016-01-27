@@ -176,16 +176,11 @@
 
          // I've gone too deep.
 
-         var descriptorProto = {
-           configurable: true,
-           enumerable: false
-         }
-
          var lengthFactory = function (property) {
            return {
              get: function () { return this.node[property].baseVal.value },
              set: function (x) { return this.node[property].baseVal.value = x }
-           )
+           }
          }
 
          var styleFactory = function (property) {
@@ -201,6 +196,13 @@
              set: function (x) { return this.node.setAttribute(property, x)}
            }
          }
+
+
+         var descriptorProto = {
+            configurable: true,
+            enumerable: false
+         }
+
 
          var makeDescriptor = function (accessor, coercers) {
            var descriptor = Object.create(descriptorProto);
@@ -232,7 +234,7 @@
          return {
            length: descriptorMaker(lengthFactory),
            style: descriptorMaker(styleFactory),
-           attribute: descriptorMaker(attrFactory)
+           attribute: descriptorMaker(attrFactory),
          }
        }());
 
@@ -242,9 +244,7 @@
            Felement.call(this, tag);
          };
          // extends Felement
-
          var p = Fshape.prototype = Object.create(Felement.prototype);
-
 
          return Fshape;
        }());
@@ -316,6 +316,65 @@
          }
 
         return Frect;
+       }());
+
+
+       var Frline = (function() {
+         function Frline () {
+           Fshape.call(this, "rect");
+
+           // Set up rectangle
+           this.node.x.baseVal.value = 0;
+           this.node.y.baseVal.value = -0.5;
+           this.node.width.baseVal.value = 1;
+           this.node.height.baseVal.value = 1;
+
+           // Set up transform
+           var tf = this.node.transform.baseVal;
+           this.transform = tf.createSVGTransformFromMatrix(zeromatrix);
+           tf.initialize(this.transform);
+           this.matrix = this.transform.matrix;
+         }
+         var p = Frline.prototype = Object.create(Fshape.prototype);
+
+         // JUST FOR FUNSIES: Not the best way to do it, but whatever
+         var zeromatrix = (function() {
+           var m = document.querySelector('svg').createSVGMatrix();
+           m.a = 0;
+           m.d = 0;
+           return m
+         }());
+
+         var pythag = function (a,b) {
+           return Math.sqrt(Math.pow(a,2)+Math.pow(b,2))
+         }
+
+
+         p.replot = function () {
+           var dx = this.x2 - this.x1;
+           var dy = this.y2 - this.y1;
+           var r = this.width / pythag(dx, dy);
+           this.matrix.a = dx;
+           this.matrix.b = dy;
+           this.matrix.c = -r * dy;
+           this.matrix.d = r * dx;
+           this.matrix.e = this.x1;
+           this.matrix.f = this.y1;
+           return this
+         }
+
+         p.redo = function (x1, y1, x2, y2, w) {
+           this.x1 = x1;
+           this.y1 = y1;
+           this.x2 = x2;
+           this.y2 = y2;
+           this.width = w;
+           return this.replot();
+         }
+
+
+
+         return Frline;
        }());
 
 
@@ -540,7 +599,8 @@
        return {
          initialise: initialise,
          Frect: Frect,
-         Fline: Fline
+         Fline: Fline,
+         Frline: Frline
        }
      }());
 
