@@ -1,12 +1,26 @@
 /*  fsvg.js: Adventures in SVG manipulation for fun and profit
     ... okay, maybe just fun.                                  */
 
+/*
+
+Rough outline of how this structure works (or doesn't work).
+PRIMITIVE SHAPES. Basically, lines and rectangles. Wrap SVG shapes.
+GRAPHIC ELEMENTS. Represent crosses, saltires etc. Wrap SVG groups.
+FLAG STRUCTURE. Represents the whole flag. Also wraps SVG groups.
+- contains GElements, which countain PShapes.
+  GElements can also contain GElements...
+
+You know what, this doesn't actually make any sense.
+
+*/
+
 var fsvg = (function() {
   'use strict';
 
+  var fsvg = {};
   var SVGNS = "http://www.w3.org/2000/svg";
 
-  var Felement = (function() {
+  fsvg.Felement = (function() {
     // A Felement contains an SVG Element. Very basic thing.
     // Creating a Felement also creates an SVG Element.
     function Felement(tag) {
@@ -49,7 +63,7 @@ var fsvg = (function() {
     return Felement;
   }());
 
-  var FDescriptor = (function() {
+  fsvg.describe = (function() {
 
     // This part is totally unnecessary, but then again, so is this whole project.
 
@@ -130,29 +144,29 @@ var fsvg = (function() {
   }());
 
 
-  var Fshape = (function() {
+  fsvg.Fshape = (function() {
     function Fshape(tag) {
-      Felement.call(this, tag);
+      fsvg.Felement.call(this, tag);
     };
     // extends Felement
-    var p = Fshape.prototype = Object.create(Felement.prototype);
+    var p = Fshape.prototype = Object.create(fsvg.Felement.prototype);
 
     return Fshape;
   }());
 
-  var Fline = (function() {
+  fsvg.Fline = (function() {
     function Fline() {
       // tag = 'line'
-      Fshape.call(this, "line");
+      fsvg.Fshape.call(this, "line");
     };
     // extends Fshape
-    var p = Fline.prototype = Object.create(Fshape.prototype, {
-      x1: FDescriptor.length('x1'),
-      x2: FDescriptor.length('x2'),
-      y1: FDescriptor.length('y1'),
-      y2: FDescriptor.length('y2'),
-      colour: FDescriptor.style('stroke'),
-      width: FDescriptor.style('strokeWidth', {
+    var p = Fline.prototype = Object.create(fsvg.Fshape.prototype, {
+      x1: fsvg.describe.length('x1'),
+      x2: fsvg.describe.length('x2'),
+      y1: fsvg.describe.length('y1'),
+      y2: fsvg.describe.length('y2'),
+      colour: fsvg.describe.style('stroke'),
+      width: fsvg.describe.style('strokeWidth', {
         get: Number,
         set: Number
       })
@@ -177,15 +191,15 @@ var fsvg = (function() {
   var Frect = (function() {
     function Frect() {
       // tag = 'rect'
-      Fshape.call(this, 'rect');
+      fsvg.Fshape.call(this, 'rect');
     };
     // Extends Fshape
-    var p = Frect.prototype = Object.create(Fshape.prototype, {
-      x: FDescriptor.length('x'),
-      y: FDescriptor.length('y'),
-      width: FDescriptor.length('width'),
-      height: FDescriptor.length('height'),
-      colour: FDescriptor.style('fill')
+    var p = Frect.prototype = Object.create(fsvg.Fshape.prototype, {
+      x: fsvg.describe.length('x'),
+      y: fsvg.describe.length('y'),
+      width: fsvg.describe.length('width'),
+      height: fsvg.describe.length('height'),
+      colour: fsvg.describe.style('fill')
     });
 
 
@@ -212,10 +226,10 @@ var fsvg = (function() {
     return Frect;
   }());
 
-
-  var Frline = (function() {
+/*
+  fsvg.Frline = (function() {
     function Frline() {
-      Fshape.call(this, "rect");
+      fsvg.Fshape.call(this, "rect");
 
       // Set up rectangle
       this.node.x.baseVal.value = 0;
@@ -229,7 +243,7 @@ var fsvg = (function() {
       tf.initialize(this.transform);
       this.matrix = this.transform.matrix;
     }
-    var p = Frline.prototype = Object.create(Fshape.prototype);
+    var p = Frline.prototype = Object.create(fsvg.Fshape.prototype);
 
     // JUST FOR FUNSIES: Not the best way to do it, but whatever
     var zeromatrix = (function() {
@@ -265,68 +279,10 @@ var fsvg = (function() {
       this.width = w;
       return this.replot();
     }
-
-
-
     return Frline;
   }());
+*/
 
-
-// Doing things "properly" has never really been my strong point.
-
-         /*
-    Rough outline of how this structure works (or doesn't work).
-    PRIMITIVE SHAPES. Basically, lines and rectangles. Wrap SVG shapes.
-    GRAPHIC ELEMENTS. Represent crosses, saltires etc. Wrap SVG groups.
-    FLAG STRUCTURE. Represents the whole flag. Also wraps SVG groups.
-    - contains GElements, which countain PShapes.
-      GElements can also contain GElements...
-
-    You know what, this doesn't actually make any sense.
-
-    Part III in the thrilling series: Getting Way Ahead Of Myself:
-    Using the SVG DOM API itself.
-
-    As I am only manipulating rectangles and polygons,
-    it shouldn't be too hard.
-    (Famous last words right there.)
-
-    Lengths are represented in the API by SVGLength,
-    Points by SVGPoint, which live in SVGPointList.
-    There's also SVGTransform and SVGMatrix, and SVGAngle, and
-    the ways to style with fill and stroke, which use the style interface
-    instead of the SVG one.
-
-    Simply, to set a length, we use <element>.length.baseVal.value
-    or .valueInSpecifiedUnits. To change the units there's two methods which
-    are used to either change the units, keeping the same actual value
-    (5cm = 50mm etc) or just change both in one fell swoop.
-
-    I don't know which one I should use, either setting
-    value or valueInSpecifiedUnits. I suppose value corresponds to
-    'user coordinate pixels' or something like that.
-
-    Since this is going to be a simple programmatical thing, I think using
-    'value' (with implied user units) is the best. I dunno.
-
-
-    Now, on to colour, or to be precise, paint.
-    In SVG, the paint can be defined as attributes like fill='blue',
-    inline styles like style="fill:'blue';", and proper CSS stylesheets which can
-    reside inside the SVG element, on the HTML page, inline or linked.
-    I believe attributes > inline styles > stylesheets when it comes to priority.
-    Thus, there are different ways to programatically set the colour.
-    Setting the attributes is done via document.setAttribute('fill', col) etc.
-    Setting via the inline style is done by accessing (node).style.fill = col,
-    or (node).style.setProperty('fill', col).
-    Changing a stylesheet is a bit more complicated but can be done by accessing
-    the stylesheet element and then getting the actual rule that is applied,
-    which lives in (stylesheet node).sheet.cssRules. Once you have that then you
-    can use (cssRule).style and so on.
-
-    For the sake of simplicity, let's use the inline style version, so we don't
-    have to mess around too much with setting attributes.
-
-   */
+return fsvg;
 
 }());
