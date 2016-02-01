@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
  <head>
 	<meta charset='utf-8'>
 	<title> Union Jack </title>
@@ -206,7 +206,7 @@
            //id: "hoistPMask",
            class: "solidmask"
          });
-         var hoistPinwheel = hoistPMask.polyline(
+         var hoistPinwheel = hoistPMask.polygon(
            0, 0,
            f.saltire.offset, -f.saltire.offset,
            f.size.hFly, f.size.hHoist,
@@ -221,7 +221,7 @@
           class: "solidmask"
         });
 
-         var flyPinwheel = flyPMask.polyline(
+         var flyPinwheel = flyPMask.polygon(
            0, 0,
            f.saltire.offset, -f.saltire.offset,
            f.size.hFly, f.size.hHoist,
