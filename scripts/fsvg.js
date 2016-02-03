@@ -23,6 +23,9 @@ var fsvg = (function(fsvg) {
       // although keep in mind that this.node is where nodes go
     }
     var p = Felement.prototype;
+    Object.defineProperties(p, {
+      id: fsvg.describe.property('id')
+    })
 
     p.appendToNode = function(parentnode) {
       parentnode.appendChild(this.node);
@@ -77,21 +80,28 @@ var fsvg = (function(fsvg) {
     var lengthFactory = function(property) {
       return {
         get: function () {return this.node[property].baseVal.value},
-        set: function(x) {return this.node[property].baseVal.value = x}
+        set: function(x) {this.node[property].baseVal.value = x}
       }
     }
 
     var styleFactory = function(property) {
       return {
         get: function () {return this.node.style[property]},
-        set: function(x) {return this.node.style[property] = x}
+        set: function(x) {this.node.style[property] = x}
       }
     }
 
     var attrFactory = function(property) {
       return {
         get: function () {return this.node.getAttribute(property)},
-        set: function(x) {return this.node.setAttribute(property, x)}
+        set: function(x) {this.node.setAttribute(property, x)}
+      }
+    }
+
+    var propFactory = function(property) {
+      return {
+        get: function () {return this.node[property]},
+        set: function(x) {this.node[property] = x}
       }
     }
 
@@ -100,23 +110,21 @@ var fsvg = (function(fsvg) {
       enumerable: false
     }
 
-    var makeDescriptor = function(accessor, coercers) {
-      var descriptor = Object.create(descriptorProto);
-      descriptor.get = accessor.get;
-      descriptor.set = accessor.set;
-      if (coercers) {
-        if (coercers.get) {
-          descriptor.get = function() {
-            return coercers.get(accessor.get.call(this));
-          }
-        };
-        if (coercers.set) {
-          descriptor.set = function(x) {
-            return accessor.set.call(this, coercers.set(x));
-          }
-        };
-      };
-      return descriptor;
+    var makeDescriptor = function(accessors, coercers) {
+      coercers = coercers || {};
+      var desc = Object.create(descriptorProto);
+
+      if (typeof coercers.get === 'function') {
+        desc.get = function () {return coercers.get(accessors.get.call(this))}
+      } else if (coercers.get !== null) {
+        desc.get = accessors.get;
+      }
+      if (typeof coercers.set === 'function') {
+        desc.set = function (x) {accessors.set.call(this, coercers.set(x))}
+      } else if (coercers.set !== null) {
+        desc.set = accessors.set;
+      }
+      return desc;
     }
 
     var descriptorMaker = function(factory) {
@@ -129,6 +137,7 @@ var fsvg = (function(fsvg) {
       length: descriptorMaker(lengthFactory),
       style: descriptorMaker(styleFactory),
       attribute: descriptorMaker(attrFactory),
+      property: descriptorMaker(propFactory)
     }
   }());
 
