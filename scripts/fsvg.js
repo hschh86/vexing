@@ -15,66 +15,8 @@ var fsvg = (function(fsvg) {
 
   var SVGNS = "http://www.w3.org/2000/svg";
 
-
-  fsvg.Felement = (function() {
-    // Simple helping stuff for SVGElements.
-    function Felement() {
-      // pretty much nothing goes here at the moment
-      // although keep in mind that this.node is where nodes go
-    }
-    var p = Felement.prototype;
-    Object.defineProperties(p, {
-      id: fsvg.describe.property('id')
-    })
-
-    p.appendToNode = function(parentnode) {
-      parentnode.appendChild(this.node);
-    }
-
-    p.getOwnerSVG = function() {
-      return this.node.ownerSVGElement;
-    }
-
-    return Felement;
-  }());
-
-  fsvg.FSVGE = (function() {
-    // Contains the whole flag.
-    function FSVGE (element) {
-      // can be passed an existing SVG Element to wrap.
-      fsvg.Felement.call(this);
-
-      if (element && element.nodeName === "svg") {
-        this.node = element;
-      } else {
-        this.node = document.createElementNS(SVGNS, "svg");
-      }
-    }
-
-    var p = FSVGE.prototype = Object.create(fsvg.Felement.prototype);
-
-    return FSVGE;
-  }());
-
-
-
-  fsvg.Fshape = (function() {
-    // generic shape class. All shape SVG elements are created through here
-    function Fshape(tag) {
-      fsvg.Felement.call(this);
-      // creates a new SVG Element, which can be accessed using this.node
-      this.node = document.createElementNS(SVGNS, tag);
-
-    }
-    var p = Fshape.prototype = Object.create(fsvg.Felement.prototype);
-
-    return Fshape;
-  }());
-
   fsvg.describe = (function() {
-
     // This part is totally unnecessary, but then again, so is this whole project.
-
     // I've gone too deep.
 
     var lengthFactory = function(property) {
@@ -139,6 +81,59 @@ var fsvg = (function(fsvg) {
       attribute: descriptorMaker(attrFactory),
       property: descriptorMaker(propFactory)
     }
+  }());
+
+  fsvg.Felement = (function() {
+    // Simple helping stuff for SVGElements.
+    function Felement() {
+      // pretty much nothing goes here at the moment
+      // although keep in mind that this.node is where nodes go
+    }
+    var p = Felement.prototype;
+    Object.defineProperties(p, {
+      id: fsvg.describe.property('id')
+    })
+
+    p.appendToNode = function(parentnode) {
+      parentnode.appendChild(this.node);
+    }
+
+    p.getOwnerSVG = function() {
+      return this.node.ownerSVGElement;
+    }
+
+    return Felement;
+  }());
+
+  fsvg.FSVGE = (function() {
+    // Contains the whole flag.
+    function FSVGE (element) {
+      // can be passed an existing SVG Element to wrap.
+      fsvg.Felement.call(this);
+
+      if (element && element.nodeName === "svg") {
+        this.node = element;
+      } else {
+        this.node = document.createElementNS(SVGNS, "svg");
+      }
+    }
+
+    var p = FSVGE.prototype = Object.create(fsvg.Felement.prototype);
+
+    return FSVGE;
+  }());
+
+  fsvg.Fshape = (function() {
+    // generic shape class. All shape SVG elements are created through here
+    function Fshape(tag) {
+      fsvg.Felement.call(this);
+      // creates a new SVG Element, which can be accessed using this.node
+      this.node = document.createElementNS(SVGNS, tag);
+
+    }
+    var p = Fshape.prototype = Object.create(fsvg.Felement.prototype);
+
+    return Fshape;
   }());
 
   fsvg.Fline = (function() {
