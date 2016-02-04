@@ -49,7 +49,11 @@ var fsvg = (function(fsvg) {
 
     var descriptorProto = {
       configurable: true,
-      enumerable: false
+      enumerable: false,
+      // Explicitly define get and set as undefined,
+      // so we can overwrite existing properties
+      get: undefined,
+      set: undefined
     }
 
     var makeDescriptor = function(accessors, coercers) {
