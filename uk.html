@@ -7,7 +7,6 @@
 	<link rel="stylesheet" href="">
 	<script src=""></script>
     -->
-    <script src="scripts/libs/snap/snap.svg-min.js"></script>
 
     <script src="scripts/fsvg.js"></script>
 
@@ -80,13 +79,9 @@
   </li>
 </ul>
    <script>
-     var Vexing = (function() {
+     /*var Vexing = (function() {
        'use strict';
-       // Declare the stuff we want.
-       var mainsvg, flagzone, unionjack;
 
-       // Compartmentalise some functions in an object...
-       // Fun With Getters And Setters!
        var f = {
          size: {
            hFly: 30,
@@ -121,182 +116,12 @@
          }
        }
 
-       // Now, let's attempt to do some OO.
-       // I don't actually know how to do this,
-       // but it's worth a shot, hey?
-
-
-
-       var initialise = function () {
-         // Step 1: Grab some References
-         // Grab the mainsvg
-         mainsvg = Snap('#main_svg_object');
-         // We want some sort of Flag Zone within it...
-         // to contain the flag.
-         flagzone = mainsvg.svg().attr({id: "flagzone"});
-
-         // Step 2: DRAW THE UNION JACK
-         // Within this Flag Zone we want to designate the area for our UJ.
-         unionjack = flagzone.svg().attr({
-           id: "unionjack",
-           // set up the ViewBox so everything works properly!
-           viewBox: [-f.size.hFly, -f.size.hHoist,
-                      f.size.fFly,  f.size.fHoist]
-         });
-
-         // Now, for some Geometry.
-
-
-         // Basic Cross.
-         var basicCross = unionjack.g().toDefs().attr({id: "basicCross"});
-         // -- Horizontal line
-         basicCross.line(
-           -f.size.hFly, 0,
-            f.size.hFly, 0
-          ).attr({id: "basicHLine"});
-         // -- Vertical line
-         basicCross.line(
-           0, -f.size.hHoist,
-           0, f.size.hHoist
-          ).attr({id: "basicVLine"});
-
-         // Saltire Bits.
-         // -- for now, just ignore the offset entirely.
-         // -- let's go down, and to the right.
-         var basicSBit = unionjack.line(
-           f.saltire.offset, -f.saltire.offset,
-           f.size.hFly, f.size.hHoist
-         ).toDefs().attr({id: "basicSBit"});
-
-
-
-         // How about some boxes?
-         var fullMask = unionjack.mask().attr({
-           // BUG: You cannot use a mask with an ID set manually.
-           //id: "fullMask",
-           class: "solidmask"
-         })
-         var fullBox = fullMask.rect(
-           -f.size.hFly, -f.size.hHoist,
-            f.size.fFly,  f.size.fHoist
-          ).attr({id: "fullBox"});
-
-
-          var quarterMask = unionjack.mask().attr({
-            //id: "quarterMask",
-            class: "solidmask",
-          });
-         var quarterBox = quarterMask.rect(
-           0, 0,
-           f.size.hFly, f.size.hHoist
-         ).attr({id: "quarterBox"});
-
-
-
-
-
-
-
-
-         // We're also gonna need to do some pinwheels.
-         // The offset point: (+f.saltire.offset, -f.saltire.offset)
-         // Moves diagonally along the unit grid.
-
-         var hoistPMask = unionjack.mask().attr({
-           //id: "hoistPMask",
-           class: "solidmask"
-         });
-         var hoistPinwheel = hoistPMask.polygon(
-           0, 0,
-           f.saltire.offset, -f.saltire.offset,
-           f.size.hFly, f.size.hHoist,
-           f.size.hFly, 0
-          ).attr({
-            id: "hoistPinwheel",
-            mask: quarterMask,
-          });
-
-        var flyPMask = unionjack.mask().attr({
-          //id: "flyPMask",
-          class: "solidmask"
-        });
-
-         var flyPinwheel = flyPMask.polygon(
-           0, 0,
-           f.saltire.offset, -f.saltire.offset,
-           f.size.hFly, f.size.hHoist,
-           0, f.size.hHoist
-          ).attr({
-            id: "flyPinwheel",
-            mask: quarterMask,
-          });
-
-
-
-
-         var backSBit = unionjack.use(basicSBit).toDefs().attr({
-           id: "backSBit",
-           stroke: f.colour.white,
-           strokeWidth: f.saltire.backWidth,
-           mask: quarterMask
-         })
-
-         var frontSBit = unionjack.use(basicSBit).toDefs().attr({
-           id: "frontSBit",
-           stroke: f.colour.red,
-           strokeWidth: f.saltire.frontWidth,
-         });
-
-
-
-         // For the moment, let's pretend it's 1707.
-
-         // Do Some Art!
-         var field = unionjack.use(fullBox).attr({
-           id: "field",
-           class: "scottishblue backdrop",
-           fill: f.colour.blue,
-
-         });
-
-         unionjack.use(backSBit)
-         .clone().transform('s-1,1')
-        .clone().transform('s-1,-1')
-         .clone().transform('s1,-1');
-
-         unionjack.use(frontSBit).attr({mask: hoistPMask})
-         .clone().transform('s-1,-1')
-
-         unionjack.use(frontSBit).attr({mask: flyPMask}).transform('s-1,1')
-         .clone().transform('s1,-1')
-
-
-         var backCross = unionjack.use(basicCross).attr({
-           id: "fimCross",
-           class: "fimbriaton",
-           stroke: f.colour.white,
-           strokeWidth: f.cross.backWidth
-         })
-         var frontCross = unionjack.use(basicCross).attr({
-           id: "mainCross",
-           class: "jackred",
-           stroke: f.colour.red,
-           strokeWidth: f.cross.frontWidth
-         })
-
-       }
-
-       return {
-         initialise: initialise
-       }
-     }());
+     })();*/
 
      window.onload = function () {
-       Vexing.initialise();
+
      }
 
-
    </script>
-
  </body>
 </html>
