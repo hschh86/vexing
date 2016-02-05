@@ -16,22 +16,63 @@ var fsvg = (function(fsvg) {
   var SVGNS = "http://www.w3.org/2000/svg",
       XLINKNS = "http://www.w3.org/1999/xlink";
 
-  var describe = fsvg.describe = (function() {
+  var retrieve = fsvg.retrieve = (function() {
+        // SVGAnimatedLength
+    var getLength = function(node, prop) {
+          return node[prop].baseVal.value;
+        },
+        setLength = function(node, prop, x) {
+          node[prop].baseVal.value = x;
+          return node;
+        },
+        // CSS2Properties
+        getStyle = function(node, prop) {
+          return node.style[prop];
+        },
+        setStyle = function(node, prop, x) {
+          node.style[prop] = x;
+          return node;
+        }
+
+    var fixprop = function (func, prop) {
+      return function(node, x) {
+        return func(node, prop, x);
+      }
+    }
+
+    return {
+      getLength: getLength,
+      setLength: setLength,
+      getStyle: getStyle,
+      setStyle: setStyle,
+      length: {
+        get: getLength,
+        set: setLength
+      },
+      style: {
+        get: getStyle,
+        set: setStyle
+      },
+      fixprop: fixprop
+    }
+  }());
+
+  var describe = fsvg.describe = (function(retrieve) {
     // Provides a way to generate descriptors for properties
 
     // SVGAnimatedLength
     var lengthFactory = function(pname, aname) {
       return {
-        get: function () {return this[pname][aname].baseVal.value},
-        set: function(x) {this[pname][aname].baseVal.value = x}
+        get: function () {return retrieve.getLength(this[pname], aname)},
+        set: function(x) {retrieve.setLength(this[pname], aname, x)}
       }
     }
 
     // CSS2Properties
     var styleFactory = function(pname, aname) {
       return {
-        get: function () {return this[pname].style[aname]},
-        set: function(x) {this[pname].style[aname] = x}
+        get: function () {return retrieve.getStyle(this[pname], aname)},
+        set: function(x) {retrieve.setStyle(this[pname], aname, x)}
       }
     }
 
@@ -92,7 +133,7 @@ var fsvg = (function(fsvg) {
       property: descriptorMaker(propFactory),
       makeDescriptor: makeDescriptor
     }
-  }());
+  }(retrieve));
 
   // Uses a descriptor or equivalent but instead just creates prefixed methods
   var defineManualGetSet = function (obj, descs) {
@@ -133,7 +174,38 @@ var fsvg = (function(fsvg) {
     }
   }());
 
+  var newSVGElem = function (tag) {return document.createElementNS(SVGNS, tag)}
 
+  // Gosh, this is really getting disorganised!
+
+  var lineTools = (function(retrieve) {
+    // redoing it in a more 'functional' manner.
+    // This is a dynamic language, after all!
+    var setLength = retrieve.setLength;
+
+    var setStart = function(node, x, y) {
+      setLength(node, 'x1', x);
+      setLength(node, 'y1', y);
+      return node;
+    }
+    var setEnd = function(node, x, y) {
+      setLength(node, 'x2', x);
+      setLength(node, 'y2', y);
+      return node;
+    }
+    var setExtent = function(node, x1, y1, x2, y2) {
+      setStart(node, x1, y1);
+      setEnd(node, x2, y2);
+      return node;
+    }
+
+    return {
+      setLength: setLength,
+      setStart: setStart,
+      setEnd: setEnd,
+      setExtent: setExtent
+    }
+  }(retrieve));
 
 
   var Felement = fsvg.Felement = (function() {
@@ -167,7 +239,7 @@ var fsvg = (function(fsvg) {
       if (element && element.nodeName === "svg") {
         this.node = element;
       } else {
-        this.node = document.createElementNS(SVGNS, "svg");
+        this.node = newSVGElem("svg");
       }
     }
 
@@ -183,7 +255,7 @@ var fsvg = (function(fsvg) {
     function Fshape(tag) {
       Felement.call(this);
       // creates a new SVG Element, which can be accessed using this.node
-      this.node = document.createElementNS(SVGNS, tag);
+      this.node = newSVGElem(tag);
 
     }
     var p = Fshape.prototype = Object.create(Felement.prototype);
@@ -211,14 +283,12 @@ var fsvg = (function(fsvg) {
     });
 
     p.setStart = function(x, y) {
-      this.x1 = x;
-      this.y1 = y;
+      lineTools.setStart(this.node, x, y);
       return this;
     }
 
     p.setEnd = function(x, y) {
-      this.x2 = x;
-      this.y2 = y;
+      lineTools.setEnd(this.node, x, y);
       return this;
     }
 
@@ -309,12 +379,17 @@ var fsvg = (function(fsvg) {
     function Fcross (halfWidth, halfHeight) {
       Fshape.call(this, "g");
 
-      this._hline = new Fline(-halfWidth, 0, halfWidth, 0);
-      this._vline = new Fline(0, -halfHeight, 0, halfHeight);
-      this._hw = hw;
-      this._hh = hh;
-      this.appendWrappers(this._hline, this._vline);
+      // create the two lines
+      this.hline = this.node.appendChild(newSVGElem('line'));
+      lineTools.setExtent(this.hline, -halfWidth, 0, halfWidth, 0);
 
+
+      this.vline = this.node.appendChild(newSVGElem('line'));
+      lineTools.setExtent(this.vline, 0, -halfHeight, 0, halfHeight);
+
+
+      this._hw = halfWidth;
+      this._hh = halfHeight;
     }
     var p = Fcross.prototype = Object.create(Fshape.prototype, {
       thickness: describe.style('strokeWidth', {get: Number, set: Number}),
@@ -322,17 +397,17 @@ var fsvg = (function(fsvg) {
     });
     MixinMethods(p, mContainer);
 
-    p.setHalfWidth = function (hw) {
-      this._hline.x1 = -hw;
-      this._hline.x2 = hw;
-      this._hw = hw
+    p.setHalfWidth = function (halfWidth) {
+      lineTools.setLength(this.hline, 'x1', -halfWidth);
+      lineTools.setLength(this.hline, 'x2', halfWidth);
+      this._hw = halfWidth
       return this;
     }
 
-    p.setHalfHeight = function (hh) {
-      this._vline.y1 = -hh;
-      this._vline.y2 = hh;
-      this._hh = hh;
+    p.setHalfHeight = function (halfHeight) {
+      lineTools.setLength(this.hline, 'y1', -halfHeight);
+      lineTools.setLength(this.hline, 'y2', halfHeight);
+      this._hh = halfHeight;
       return this;
     }
 
