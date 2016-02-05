@@ -13,37 +13,41 @@ shaped mask thing, etc, etc.
 var fsvg = (function(fsvg) {
   'use strict';
 
-  var SVGNS = "http://www.w3.org/2000/svg";
+  var SVGNS = "http://www.w3.org/2000/svg",
+      XLINKNS = "http://www.w3.org/1999/xlink";
 
-  fsvg.describe = (function() {
-    // This part is totally unnecessary, but then again, so is this whole project.
-    // I've gone too deep.
+  var describe = fsvg.describe = (function() {
+    // Provides a way to generate descriptors for properties
 
-    var lengthFactory = function(property) {
+    // SVGAnimatedLength
+    var lengthFactory = function(pname, aname) {
       return {
-        get: function () {return this.node[property].baseVal.value},
-        set: function(x) {this.node[property].baseVal.value = x}
+        get: function () {return this[pname][aname].baseVal.value},
+        set: function(x) {this[pname][aname].baseVal.value = x}
       }
     }
 
-    var styleFactory = function(property) {
+    // CSS2Properties
+    var styleFactory = function(pname, aname) {
       return {
-        get: function () {return this.node.style[property]},
-        set: function(x) {this.node.style[property] = x}
+        get: function () {return this[pname].style[aname]},
+        set: function(x) {this[pname].style[aname] = x}
       }
     }
 
-    var attrFactory = function(property) {
+    // attribute (no namespace)
+    var attrFactory = function(pname, aname) {
       return {
-        get: function () {return this.node.getAttribute(property)},
-        set: function(x) {this.node.setAttribute(property, x)}
+        get: function () {return this[pname].getAttribute(aname)},
+        set: function(x) {this[pname].setAttribute(aname, x)}
       }
     }
 
-    var propFactory = function(property) {
+    // normal property / method
+    var propFactory = function(pname, aname) {
       return {
-        get: function () {return this.node[property]},
-        set: function(x) {this.node[property] = x}
+        get: function () {return this[pname][aname]},
+        set: function(x) {this[pname][aname] = x}
       }
     }
 
@@ -74,20 +78,65 @@ var fsvg = (function(fsvg) {
     }
 
     var descriptorMaker = function(factory) {
-      return (function(property, coercers) {
-        return makeDescriptor(factory(property), coercers);
+      return (function(property, coercers, location) {
+        location = location || 'node';
+        return makeDescriptor(factory(location, property), coercers);
       });
     }
+
 
     return {
       length: descriptorMaker(lengthFactory),
       style: descriptorMaker(styleFactory),
       attribute: descriptorMaker(attrFactory),
-      property: descriptorMaker(propFactory)
+      property: descriptorMaker(propFactory),
+      makeDescriptor: makeDescriptor
     }
   }());
 
-  fsvg.Felement = (function() {
+  // Uses a descriptor or equivalent but instead just creates prefixed methods
+  var defineManualGetSet = function (obj, descs) {
+    Object.keys(descs).forEach(function (key, index, array) {
+      if (descs[key].get) {obj['get_'+key] = descs[key].get;}
+      if (descs[key].set) {obj['set_'+key] = descs[key].set;}
+    })
+  }
+
+  var MixinMethods = function (target, source, names) {
+    names = (typeof names === 'undefined') ? Object.keys(source) : names;
+    names.forEach(function (key, index, array) {
+      target[key] = source[key];
+    })
+  }
+
+  var mContainer = {
+    // mixin for FSVG containing things in this.node
+    appendWrappers: function () {
+      for (var i=0; i<arguments.length; i++) {
+        var obj = arguments[i];
+        this.node.appendChild(obj.node);
+      }
+    },
+  }
+
+  // utility, for use with the coercers parameter when using makeDescriptor
+  var utility = (function() {
+    var halve = function (x) {return x/2}
+    var double = function (x) {return x*2}
+    return {
+      halve: halve,
+      double: double,
+      halfToFull: {
+        get: double,
+        set: halve
+      }
+    }
+  }());
+
+
+
+
+  var Felement = fsvg.Felement = (function() {
     // Simple helping stuff for SVGElements.
     function Felement() {
       // pretty much nothing goes here at the moment
@@ -95,7 +144,7 @@ var fsvg = (function(fsvg) {
     }
     var p = Felement.prototype;
     Object.defineProperties(p, {
-      id: fsvg.describe.property('id')
+      id: describe.property('id')
     })
 
     p.appendToNode = function(parentnode) {
@@ -109,11 +158,11 @@ var fsvg = (function(fsvg) {
     return Felement;
   }());
 
-  fsvg.FSVGE = (function() {
+  var FSVGE = fsvg.FSVGE = (function() {
     // Contains the whole flag.
     function FSVGE (element) {
       // can be passed an existing SVG Element to wrap.
-      fsvg.Felement.call(this);
+      Felement.call(this);
 
       if (element && element.nodeName === "svg") {
         this.node = element;
@@ -122,41 +171,43 @@ var fsvg = (function(fsvg) {
       }
     }
 
-    var p = FSVGE.prototype = Object.create(fsvg.Felement.prototype);
+    var p = FSVGE.prototype = Object.create(Felement.prototype);
+    MixinMethods(p, mContainer);
 
     return FSVGE;
   }());
 
-  fsvg.Fshape = (function() {
+
+  var Fshape = fsvg.Fshape = (function() {
     // generic shape class. All shape SVG elements are created through here
     function Fshape(tag) {
-      fsvg.Felement.call(this);
+      Felement.call(this);
       // creates a new SVG Element, which can be accessed using this.node
       this.node = document.createElementNS(SVGNS, tag);
 
     }
-    var p = Fshape.prototype = Object.create(fsvg.Felement.prototype);
+    var p = Fshape.prototype = Object.create(Felement.prototype);
 
     return Fshape;
   }());
 
-  fsvg.Fline = (function() {
+  var Fline = fsvg.Fline = (function() {
     function Fline (x1, y1, x2, y2) {
       // tag = 'line'
-      fsvg.Fshape.call(this, "line");
+      Fshape.call(this, "line");
 
       if (typeof x1 !== 'undefined') {
         this.setExtent(x1, y1, x2, y2);
       }
     };
     // extends Fshape
-    var p = Fline.prototype = Object.create(fsvg.Fshape.prototype, {
-      x1: fsvg.describe.length('x1'),
-      x2: fsvg.describe.length('x2'),
-      y1: fsvg.describe.length('y1'),
-      y2: fsvg.describe.length('y2'),
-      colour: fsvg.describe.style('stroke'),
-      width:  fsvg.describe.style('strokeWidth', {get: Number, set: Number})
+    var p = Fline.prototype = Object.create(Fshape.prototype, {
+      x1: describe.length('x1'),
+      x2: describe.length('x2'),
+      y1: describe.length('y1'),
+      y2: describe.length('y2'),
+      colour: describe.style('stroke'),
+      thickness:  describe.style('strokeWidth', {get: Number, set: Number})
     });
 
     p.setStart = function(x, y) {
@@ -178,22 +229,22 @@ var fsvg = (function(fsvg) {
     return Fline;
   }());
 
-  fsvg.Frect = (function() {
+  var Frect = fsvg.Frect = (function() {
     function Frect (x1, y1, x2, y2) {
       // tag = 'rect'
-      fsvg.Fshape.call(this, 'rect');
+      Fshape.call(this, 'rect');
 
       if (typeof x1 !== 'undefined') {
         this.setExtent(x1, y1, x2, y2);
       }
     };
     // Extends Fshape
-    var p = Frect.prototype = Object.create(fsvg.Fshape.prototype, {
-      x: fsvg.describe.length('x'),
-      y: fsvg.describe.length('y'),
-      width:  fsvg.describe.length('width'),
-      height: fsvg.describe.length('height'),
-      colour: fsvg.describe.style('fill')
+    var p = Frect.prototype = Object.create(Fshape.prototype, {
+      x: describe.length('x'),
+      y: describe.length('y'),
+      width:  describe.length('width'),
+      height: describe.length('height'),
+      colour: describe.style('fill')
     });
 
 
@@ -221,16 +272,16 @@ var fsvg = (function(fsvg) {
   }());
 
 
-  fsvg.Fpolygon = (function () {
+  var Fpolygon = fsvg.Fpolygon = (function () {
     function Fpolygon (pstr) {
-      fsvg.Fshape.call(this, "polygon")
+      Fshape.call(this, "polygon")
 
       if (typeof pstr !== 'undefined') {
         this.setByString(pstr);
       }
     }
-    var p = Fpolygon.prototype = Object.create(fsvg.Fshape.prototype, {
-      colour: fsvg.describe.style('fill')
+    var p = Fpolygon.prototype = Object.create(Fshape.prototype, {
+      colour: describe.style('fill')
     });
 
     p.setByString = function (pstr) {
@@ -251,6 +302,60 @@ var fsvg = (function(fsvg) {
 
     return Fpolygon;
   }());
+
+  // More complex shapes!
+
+  var Fcross = fsvg.Fcross = (function() {
+    function Fcross (halfWidth, halfHeight) {
+      Fshape.call(this, "g");
+
+      this._hline = new Fline(-halfWidth, 0, halfWidth, 0);
+      this._vline = new Fline(0, -halfHeight, 0, halfHeight);
+      this._hw = hw;
+      this._hh = hh;
+      this.appendWrappers(this._hline, this._vline);
+
+    }
+    var p = Fcross.prototype = Object.create(Fshape.prototype, {
+      thickness: describe.style('strokeWidth', {get: Number, set: Number}),
+      colour: describe.style('stroke'),
+    });
+    MixinMethods(p, mContainer);
+
+    p.setHalfWidth = function (hw) {
+      this._hline.x1 = -hw;
+      this._hline.x2 = hw;
+      this._hw = hw
+      return this;
+    }
+
+    p.setHalfHeight = function (hh) {
+      this._vline.y1 = -hh;
+      this._vline.y2 = hh;
+      this._hh = hh;
+      return this;
+    }
+
+    var hwaccessors = {
+      get: function () {return this._hw},
+      set: p.setHalfWidth
+    }
+    var hhaccessors = {
+      get: function () {return this._hh},
+      set: p.setHalfHeight
+    }
+
+    Object.defineProperties(p, {
+      halfWidth: describe.makeDescriptor(hwaccessors),
+      halfHeight: describe.makeDescriptor(hhaccessors),
+      fullWidth: describe.makeDescriptor(hwaccessors, utility.halfToFull),
+      fullHeight: describe.makeDescriptor(hhaccessors, utility.halfToFull)
+    });
+
+    return Fcross;
+  }());
+
+
 
 return fsvg;
 }(fsvg || {}));
