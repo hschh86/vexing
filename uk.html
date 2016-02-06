@@ -9,6 +9,7 @@
     -->
 
     <script src="scripts/fsvg.js"></script>
+    <script src="scripts/flagshapes.js"></script>
 
     <!-- Temporary style. -->
     <style>
@@ -121,7 +122,13 @@
 
      window.onload = function () {
        'use strict';
-       
+       window.msvg = document.getElementById('main_svg_object');
+       msvg.setAttribute('viewBox', '-30, -15, 60, 30')
+       window.plus = new FlagShapes.Cross(5, 5);
+       plus.setThickness(1);
+       plus.setColour('red');
+       msvg.appendChild(plus.node)
+
 
 
      }

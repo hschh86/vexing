@@ -2,14 +2,6 @@
     ... okay, maybe just fun.                                  */
 
 
-/*
-
-Revised Version! Now, the plan is to lump all basic primitives together
-under fsvg or maybe flagshapes. things such as crosses, stars, that pinwheel
-shaped mask thing, etc, etc.
-
-*/
-
 var fsvg = (function(fsvg) {
   'use strict';
 
@@ -44,12 +36,20 @@ var fsvg = (function(fsvg) {
       setStyle: setStyle,
     }
   }());
+/*
+  var pfix = function(fn, prop) {
+    return function (x) {
+      return fn(prop, x);
+    }
+  }
+*/
+
+  var newElement = fsvg.newElement = function (tag) {
+    return document.createElementNS(SVGNS, tag)
+  }
 
 
-  var newElement = function (tag) {return document.createElementNS(SVGNS, tag)}
-
-
-  var lineTools = fsvg.lineTools = (function() {
+  var line = fsvg.line = (function() {
 
     var setLength = retrieve.setLength,
         setStyle = retrieve.setStyle;
@@ -109,49 +109,6 @@ var fsvg = (function(fsvg) {
       setExtent: setExtent
     }
   }());
-
-
-
-  // More complex shapes!
-
-  var Fcross = fsvg.Fcross = (function() {
-    function Fcross (halfWidth, halfHeight) {
-      this.node = newElement('g');
-
-      // create the two lines
-      this.hline = this.node.appendChild(newSVGElem('line'));
-      lineTools.setExtent.call(this.hline, -halfWidth, 0, halfWidth, 0);
-
-
-      this.vline = this.node.appendChild(newSVGElem('line'));
-      lineTools.setExtent.call(this.vline, 0, -halfHeight, 0, halfHeight);
-
-    }
-    var p = Fcross.prototype;
-
-    p.setHalfWidth = function (halfWidth) {
-      retrieve.setLength.call(this.hline, 'x1', -halfWidth);
-      retrieve.setLength.call(this.hline, 'x2', halfWidth);
-      return this;
-    }
-
-    p.setHalfHeight = function (halfHeight) {
-      retrieve.setLength.call(this.hline, 'y1', -halfHeight);
-      retrieve.setLength.call(this.hline, 'y2', halfHeight);
-      return this;
-    }
-
-    p.setThickness = function (thickness) {
-      retrieve.setStyle.call(this.node, 'strokeWidth', thickness);
-    }
-
-    p.setColour = function (colour) {
-      retrieve.setStyle.call(this.node, 'stroke', colour);
-    }
-
-    return Fcross;
-  }());
-
 
 
 return fsvg;
