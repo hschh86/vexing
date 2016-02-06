@@ -2,8 +2,8 @@
 
 var FlagShapes = (function(FlagShapes, fsvg) {
   var retrieve = fsvg.retrieve,
-      lineTools = fsvg.lineTools,
-      rectTools = fsvg.rectTools;
+      line = fsvg.line,
+      rect = fsvg.rect;
       newElement = fsvg.newElement;
 
   var Cross = FlagShapes.Cross = (function() {
@@ -12,11 +12,11 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
       // create the two lines
       this.hline = this.node.appendChild(newElement('line'));
-      lineTools.setExtent.call(this.hline, -halfWidth, 0, halfWidth, 0);
+      line.setExtent.call(this.hline, -halfWidth, 0, halfWidth, 0);
 
 
       this.vline = this.node.appendChild(newElement('line'));
-      lineTools.setExtent.call(this.vline, 0, -halfHeight, 0, halfHeight);
+      line.setExtent.call(this.vline, 0, -halfHeight, 0, halfHeight);
 
     }
     var p = Cross.prototype;

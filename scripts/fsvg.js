@@ -77,7 +77,7 @@ var fsvg = (function(fsvg) {
     }
   }());
 
-  var rectTools = fsvg.rectTools = (function() {
+  var rect = fsvg.rect = (function() {
     var setLength = retrieve.setLength,
         setStyle = retrieve.setStyle;
 
