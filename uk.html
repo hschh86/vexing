@@ -78,6 +78,7 @@
     </ul>
   </li>
 </ul>
+
    <script>
      /*var Vexing = (function() {
        'use strict';
@@ -120,29 +121,7 @@
 
      window.onload = function () {
        'use strict';
-       // Testing fsvg
-       window.rfsvg = new fsvg.FSVGE(document.getElementById('main_svg_object'));
-       rfsvg.node.setAttribute('viewBox', '-30 -15 60 30');
-
-       // draw a blue rectangle.
-       window.blueRectangle = new fsvg.Frect(-5, -5, 5, 10);
-       blueRectangle.colour = 'blue';
-
-       // draw a purple line.
-       window.purpleLine = new fsvg.Fline(0, 0, 10, -10);
-       purpleLine.colour = 'purple';
-
-       // draw a green triangle.
-       window.greenTriangle = new fsvg.Fpolygon([-10,-10,-10,0,-5,-5]);
-       greenTriangle.colour = 'green'
-
-       // draw a red cross.
-       window.redCross = new fsvg.Fcross(5, 5);
-       redCross.colour = 'red';
-       redCross.thickness = 4;
-
-
-       rfsvg.appendWrappers(blueRectangle, purpleLine, greenTriangle, redCross)
+       
 
 
      }
