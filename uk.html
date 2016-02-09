@@ -127,7 +127,12 @@
        window.plus = new FlagShapes.Cross(5, 5);
        plus.setThickness(1);
        plus.setColour('red');
+       plus.setId('hoopy')
        msvg.appendChild(plus.node)
+
+       window.plus2 = plus.makeInstance();
+       msvg.appendChild(plus2.node)
+       plus2.node.setAttribute('transform', 'rotate(30)')
 
 
 

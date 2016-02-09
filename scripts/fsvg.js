@@ -8,106 +8,166 @@ var fsvg = (function(fsvg) {
   var SVGNS = fsvg.SVGNS = "http://www.w3.org/2000/svg",
       XLINKNS = fsvg.XLINKNS = "http://www.w3.org/1999/xlink";
 
+  var newElement = fsvg.newElement = function (tag) {
+    return document.createElementNS(SVGNS, tag)
+  }
+
+  // Mixin Utilities
+  var extend = fsvg.extend = function (target, source, methodNames) {
+    methodNames = methodNames || Object.keys(source);
+    methodNames.forEach(function (methodName) {
+      target[methodName] = source[methodName];
+    });
+    return target;
+  }
+
+  var partialone = fsvg.partialone = function (fn, firstarg) {
+    return function (x) {
+      return fn(firstarg, x);
+    }
+  }
+
+  var partial = fsvg.partial = function (fn) {
+    var slice = Array.prototype.slice;
+    var partialargs = slice.call(arguments, 1);
+    return function () {
+      var fullargs = partialargs.concat(slice(arguments));
+      return fn.apply(this, fullargs);
+    }
+  }
+
   var retrieve = fsvg.retrieve = (function() {
     // Helper functions for grabbing SVG properties.
     // For use with 'this' and call
+    var retrieve = {};
 
         // SVGAnimatedLength
-    var getLength = function(prop) {
+    var getLength = retrieve.getLength = function(prop) {
           return this[prop].baseVal.value;
         },
-        setLength = function(prop, x) {
+        setLength = retrieve.setLength = function(prop, x) {
           this[prop].baseVal.value = x;
-          return this;
         },
         // CSS2Properties
-        getStyle = function(prop) {
+        getStyle = retrieve.getStyle = function(prop) {
           return this.style[prop];
         },
-        setStyle = function(prop, x) {
+        setStyle = retrieve.setStyle = function(prop, x) {
           this.style[prop] = x;
-          return this;
+        },
+        // attribute
+        getAttribute = retrieve.getAttribute = function(prop) {
+          return this.getAttribute(prop);
+        },
+        setAttribute = retrieve.setAttribute = function(prop, x) {
+          this.setAttribute(prop, x)
+        },
+        // property
+        getProperty = retrieve.getProperty = function(prop) {
+          return this[prop];
+        },
+        setProperty = retrieve.setProperty = function(prop, x) {
+          this[prop] = x;
         }
 
-    return {
-      getLength: getLength,
-      setLength: setLength,
-      getStyle: getStyle,
-      setStyle: setStyle,
-    }
+    return retrieve;
   }());
-/*
-  var pfix = function(fn, prop) {
-    return function (x) {
-      return fn(prop, x);
-    }
-  }
-*/
 
-  var newElement = fsvg.newElement = function (tag) {
-    return document.createElementNS(SVGNS, tag)
+  var basicSetters = extend({}, retrieve,
+     ['setLength', 'setStyle', 'setProperty', 'setAttribute']);
+
+  var generic = fsvg.generic = (function() {
+    var generic = {};
+    var getId = generic.getId = function() {
+          return this.id;
+        },
+        setId = generic.setId = function(id) {
+          return this.id = id;
+        },
+        appendToNode = generic.appendToNode = function (parentnode) {
+          parentnode.appendChild(this);
+        },
+        getOwnerSVG = generic.getOwnerSVG = function () {
+          return this.ownerSVGElement;
+        }
+    return generic;
+  }());
+
+  var basics = fsvg.basicshape = {
+    setLocation: function (x, y) {
+      setLength.call(this, 'x', x);
+      setLength.call(this, 'y', y);
+    }
   }
 
 
   var line = fsvg.line = (function() {
 
+    var line = {};
+    //extend(line, basicSetters);
+
     var setLength = retrieve.setLength,
         setStyle = retrieve.setStyle;
 
-    var setStart = function(x, y) {
+    var setStart = line.setStart = function(x, y) {
       setLength.call(this, 'x1', x);
       setLength.call(this, 'y1', y);
-      return this;
     }
-    var setEnd = function(x, y) {
+    var setEnd = line.setEnd = function(x, y) {
       setLength.call(this, 'x2', x);
       setLength.call(this, 'y2', y);
-      return this;
     }
-    var setExtent = function(x1, y1, x2, y2) {
+    var setExtent = line.setExtent = function(x1, y1, x2, y2) {
       setStart.call(this, x1, y1);
       setEnd.call(this, x2, y2);
-      return this;
     }
 
-    return {
-      setStart: setStart,
-      setEnd: setEnd,
-      setExtent: setExtent
-    }
+    return line;
   }());
 
   var rect = fsvg.rect = (function() {
+
+    var rect = {};
+    //extend(rect, basicSetters);
+    extend(rect, basics, ['setLocation']);
+
     var setLength = retrieve.setLength,
-        setStyle = retrieve.setStyle;
+        setStyle = retrieve.setStyle,
+        setLocation = retrieve.setLocation;
 
-    var setLocation = function (x, y) {
-      setLength.call(this, 'x', x);
-      setLength.call(this, 'y', y);
-      return this;
-    }
-
-    var setSize = function (width, height) {
+    var setSize = rect.setSize = function (width, height) {
       setLength.call(this, 'width', width);
       setLength.call(this, 'height', height);
-      return this;
     }
 
-    var setExtent = function (x1, y1, x2, y2) {
+    var setExtent = rect.setExtent = function (x1, y1, x2, y2) {
       var xmin = Math.min(x1, x2),
           ymin = Math.min(y1, y2),
           xdif = Math.abs(x1 - x2),
           ydif = Math.abs(y1 - y2);
       setLocation.call(this, xmin, ymin);
       setSize.call(this, xdif, ydif);
-      return this;
     }
 
-    return {
-      setLocation: setLocation,
-      setSize: setSize,
-      setExtent: setExtent
+    return rect;
+  }());
+
+  var group = fsvg.group = (function() {
+    var group = {};
+    //extend(group, basicSetters);
+    return group;
+  }());
+
+
+  var use = fsvg.use = (function() {
+    var use = {};
+    //extend(use, basicSetters);
+    extend(use, basics, ['setLocation']);
+
+    var setHref = use.setHref = function (href) {
+      this.setAttributeNS(XLINKNS, 'href', href);
     }
+    return use;
   }());
 
 
