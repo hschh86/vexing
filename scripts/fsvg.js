@@ -36,6 +36,31 @@ var fsvg = (function(fsvg) {
     }
   }
 
+  // utility for dealing with IRIs for #ids.
+  var idiri = fsvg.idiri = (function() {
+    // A restricted version of the allowed characters in HTML IDs
+    // because I don't want to deal with escaping them
+    // mainly HTML4's letter>alphanumerics+underscore+hyphen, but not including
+    // the : or the .
+    var nameregex = /^[a-z]+[a-z0-9_\-]*$/i;
+    var test = function (id) {return nameregex.test(id);}
+    var valid = function (id) {
+      if (test(id)) {
+        return id;
+      } else {
+        throw new Error("Invalid id: " + id);
+      }
+    }
+    var IRI = function (id) {return "#" + valid(id);}
+    var funcIRI = function (id) {return "url(" + IRI(id) + ")";}
+    return {
+      test: test,
+      valid: valid,
+      IRI: IRI,
+      funcIRI: funcIRI
+    }
+  }());
+
   var retrieve = fsvg.retrieve = (function() {
     // Helper functions for grabbing SVG properties.
     // For use with 'this' and call
@@ -82,6 +107,7 @@ var fsvg = (function(fsvg) {
           return this.id;
         },
         setId = generic.setId = function(id) {
+          id = idiri.valid(id);
           return this.id = id;
         },
         appendToNode = generic.appendToNode = function (parentnode) {

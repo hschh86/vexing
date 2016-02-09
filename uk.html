@@ -124,13 +124,12 @@
        'use strict';
        window.msvg = document.getElementById('main_svg_object');
        msvg.setAttribute('viewBox', '-30, -15, 60, 30')
-       window.plus = new FlagShapes.Cross(5, 5);
+       window.plus = new FlagShapes.Cross(5, 5, 'hoopy');
        plus.setThickness(1);
        plus.setColour('red');
-       plus.setId('hoopy')
        msvg.appendChild(plus.node)
 
-       window.plus2 = plus.makeInstance();
+       window.plus2 = plus.makeInstance('parq');
        msvg.appendChild(plus2.node)
        plus2.node.setAttribute('transform', 'rotate(30)')
 
