@@ -8,6 +8,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       use = fsvg.use;
       extend = fsvg.extend;
       partialone = fsvg.partialone;
+      idiri = fsvg.idiri;
 
 
   // META
@@ -26,6 +27,21 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       }
     });
     return reciever;
+  }
+
+  var InstantiateInstance = function (proto, sourceid, instid) {
+    var iri = idiri.IRI(sourceid);
+    if (typeof instid !== 'undefined') {
+      instid = idiri.valid(instid);
+    }
+    // do what 'new' does
+    var newInstance = Object.create(proto);
+    newInstance.node = newElement('use');
+    use.setHref.call(newInstance.node, iri);
+    if (instid) {
+      fsvg.generic.setId.call(newInstance.node, instid);
+    }
+    return newInstance;
   }
 
   var GenericShapeProto = makeMethodsWorkOnProperty({}, fsvg.generic, 'node');
@@ -73,15 +89,9 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     fsvg.extend(instancePrototype, p, ['setThickness', 'setColour']);
     makeMethodsWorkOnProperty(instancePrototype, fsvg.use, 'node');
 
-    p.makeInstance = function () {
+    p.makeInstance = function (instid) {
       var id = this.getId();
-      if (id !== "") {
-        // do what 'new' does
-        var newInstance = Object.create(instancePrototype);
-        newInstance.node = newElement('use');
-        newInstance.setHref("#"+id);
-        return newInstance;
-      }
+      return InstantiateInstance(instancePrototype, id, instid);
     }
 
     return Cross;

@@ -159,7 +159,7 @@ var fsvg = (function(fsvg) {
 
     var setLength = retrieve.setLength,
         setStyle = retrieve.setStyle,
-        setLocation = retrieve.setLocation;
+        setLocation = basics.setLocation;
 
     var setSize = rect.setSize = function (width, height) {
       setLength.call(this, 'width', width);
