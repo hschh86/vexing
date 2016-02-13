@@ -123,15 +123,22 @@
      window.onload = function () {
        'use strict';
        window.msvg = document.getElementById('main_svg_object');
-       msvg.setAttribute('viewBox', '-30, -15, 60, 30')
-       window.plus = new FlagShapes.Cross(5, 5, 'hoopy');
-       plus.setThickness(1);
-       plus.setColour('red');
-       msvg.appendChild(plus.node)
+       fsvg.svge.setViewExtent.call(msvg, -30, -15, 30, 15);
 
-       window.plus2 = plus.makeInstance('parq');
-       msvg.appendChild(plus2.node)
-       plus2.node.setAttribute('transform', 'rotate(30)')
+       window.field = new FlagShapes.WRectangle(30, 15, 'field');
+       field.setColour('navy');
+       field.appendToNode(msvg);
+
+       window.georg = new FlagShapes.Cross(30, 15, 'georg');
+       georg.setColour('white');
+       georg.setThickness(10);
+       georg.appendToNode(msvg);
+
+       window.eng = new FlagShapes.Cross(28, 13, 'eng');
+       eng.setColour('red');
+       eng.setThickness(6);
+       eng.appendToNode(msvg);
+
 
 
 

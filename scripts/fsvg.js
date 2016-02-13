@@ -8,9 +8,6 @@ var fsvg = (function(fsvg) {
   var SVGNS = fsvg.SVGNS = "http://www.w3.org/2000/svg",
       XLINKNS = fsvg.XLINKNS = "http://www.w3.org/1999/xlink";
 
-  var newElement = fsvg.newElement = function (tag) {
-    return document.createElementNS(SVGNS, tag)
-  }
 
   // Mixin Utilities
   var extend = fsvg.extend = function (target, source, methodNames) {
@@ -22,8 +19,8 @@ var fsvg = (function(fsvg) {
   }
 
   var partialone = fsvg.partialone = function (fn, firstarg) {
-    return function (x) {
-      return fn(firstarg, x);
+    return function (value) {
+      return fn.call(this, firstarg, value);
     }
   }
 
@@ -36,13 +33,16 @@ var fsvg = (function(fsvg) {
     }
   }
 
+  // I'm not sure if this is necessary but whatever
+  var freeze = Object.freeze || Object;
+
   // utility for dealing with IRIs for #ids.
   var idiri = fsvg.idiri = (function() {
     // A restricted version of the allowed characters in HTML IDs
     // because I don't want to deal with escaping them
     // mainly HTML4's letter>alphanumerics+underscore+hyphen, but not including
     // the : or the .
-    var nameregex = /^[a-z]+[a-z0-9_\-]*$/i;
+    var nameregex = /^[a-z][a-z0-9_\-]*$/i;
     var test = function (id) {return nameregex.test(id);}
     var valid = function (id) {
       if (test(id)) {
@@ -53,13 +53,30 @@ var fsvg = (function(fsvg) {
     }
     var IRI = function (id) {return "#" + valid(id);}
     var funcIRI = function (id) {return "url(" + IRI(id) + ")";}
-    return {
+    return freeze({
       test: test,
       valid: valid,
       IRI: IRI,
       funcIRI: funcIRI
-    }
+    })
   }());
+
+  // simple maths utility
+  var extentToLS = function (x1, y1, x2, y2) {
+    var xmin = Math.min(x1, x2),
+        ymin = Math.min(y1, y2),
+        xdif = Math.abs(x1 - x2),
+        ydif = Math.abs(y1 - y2);
+    return [xmin, ymin, xdif, ydif];
+  }
+
+  var newElement = fsvg.newElement = function (tag, id) {
+    var elem = document.createElementNS(SVGNS, tag);
+    if (typeof id !== 'undefined') {
+      elem.id = idiri.valid(id);
+    }
+    return elem
+  }
 
   var retrieve = fsvg.retrieve = (function() {
     // Helper functions for grabbing SVG properties.
@@ -95,7 +112,7 @@ var fsvg = (function(fsvg) {
           this[prop] = x;
         }
 
-    return retrieve;
+    return freeze(retrieve);
   }());
 
   var basicSetters = extend({}, retrieve,
@@ -116,15 +133,36 @@ var fsvg = (function(fsvg) {
         getOwnerSVG = generic.getOwnerSVG = function () {
           return this.ownerSVGElement;
         }
-    return generic;
+    return freeze(generic);
   }());
 
   var basics = fsvg.basicshape = {
     setLocation: function (x, y) {
-      setLength.call(this, 'x', x);
-      setLength.call(this, 'y', y);
+      retrieve.setLength.call(this, 'x', x);
+      retrieve.setLength.call(this, 'y', y);
+    },
+    setSize: function (width, height) {
+      retrieve.setLength.call(this, 'width', width);
+      retrieve.setLength.call(this, 'height', height);
     }
   }
+
+  var svge = fsvg.svge = (function() {
+    var svge = {};
+    var setViewBox = svge.setViewBox = function (x, y, width, height) {
+      this.setAttribute('viewBox', [x, y, width, height]);
+    }
+    var setViewExtent = svge.setViewExtent = function (x1, y1, x2, y2) {
+      this.setAttribute('viewBox', extentToLS(x1, y1, x2, y2));
+    }
+    var viewBoxBase = svge.viewBox = function () {
+      return this.viewBox.baseVal;
+    }
+    var defs = svge.defs = function () {
+      return this.querySelector('defs');
+    }
+    return svge;
+  }());
 
 
   var line = fsvg.line = (function() {
@@ -148,40 +186,52 @@ var fsvg = (function(fsvg) {
       setEnd.call(this, x2, y2);
     }
 
-    return line;
+    return freeze(line);
   }());
 
   var rect = fsvg.rect = (function() {
 
     var rect = {};
     //extend(rect, basicSetters);
-    extend(rect, basics, ['setLocation']);
+    extend(rect, basics, ['setLocation', 'setSize']);
 
     var setLength = retrieve.setLength,
         setStyle = retrieve.setStyle,
-        setLocation = basics.setLocation;
+        setLocation = basics.setLocation,
+        setSize = basics.setSize;
 
-    var setSize = rect.setSize = function (width, height) {
-      setLength.call(this, 'width', width);
-      setLength.call(this, 'height', height);
-    }
+    rect.setWidth = partialone(setLength, 'width');
+    rect.setHeight = partialone(setLength, 'height');
+    rect.setX = partialone(setLength, 'x');
+    rect.setY = partialone(setLength, 'y');
 
     var setExtent = rect.setExtent = function (x1, y1, x2, y2) {
-      var xmin = Math.min(x1, x2),
-          ymin = Math.min(y1, y2),
-          xdif = Math.abs(x1 - x2),
-          ydif = Math.abs(y1 - y2);
-      setLocation.call(this, xmin, ymin);
-      setSize.call(this, xdif, ydif);
+      var params = extentToLS(x1, y1, x2, y2);
+      setLocation.call(this, params[0], params[1]);
+      setSize.call(this, params[2], params[3]);
     }
 
-    return rect;
+    return freeze(rect);
+  }());
+
+  var poly = fsvg.poly = (function() {
+    // for polygons and polylines
+    var poly = {};
+    var setLength = retrieve.setLength;
+
+    var setByString = poly.setByString = function (str) {
+          this.setAttribute('points', str);
+        },
+        getPoints = poly.getPoints = function () {
+          return this.points;
+        }
+    return freeze(poly);
   }());
 
   var group = fsvg.group = (function() {
     var group = {};
     //extend(group, basicSetters);
-    return group;
+    return freeze(group);
   }());
 
 
@@ -193,7 +243,7 @@ var fsvg = (function(fsvg) {
     var setHref = use.setHref = function (href) {
       this.setAttributeNS(XLINKNS, 'href', href);
     }
-    return use;
+    return freeze(use);
   }());
 
 
