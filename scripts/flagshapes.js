@@ -3,17 +3,15 @@
 var FlagShapes = (function(FlagShapes, fsvg) {
   var retrieve = fsvg.retrieve,
       newElement = fsvg.newElement;
-      use = fsvg.use;
       extend = fsvg.extend;
       partialone = fsvg.partialone;
       idiri = fsvg.idiri;
 
 
-  // META
-
-
   var makeMethodsWorkOnProperty = function(reciever, source, propertyName, methodNames) {
-    // not a very good general-use function, but i'll take it!
+    /* Extends the 'reciever' object with the methods from source, but
+       with the new methods applied to a property of reciever instead.
+       Used for things like e.setWidth(x) -> source.setWidth.call(e.node, x) */
     methodNames = methodNames || Object.keys(source);
     methodNames.forEach(function (methodName) {
       var sourceMethod = source[methodName];
@@ -28,22 +26,25 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   }
 
   var GenericShapeProto = makeMethodsWorkOnProperty({}, fsvg.generic, 'node');
+  /* Implements things like setId, getOwnerSVG, appendToNode etc */
 
   var addInstances = (function() {
+    /* extends sourcePrototype object with a makeInstance method that creates
+       a <use> element that references the context element. */
 
     var InstantiateInstance = function (proto, sourceid, instid) {
+      /* Inner function that creates instance objects */
       var iri = idiri.IRI(sourceid);
-
-      // do what 'new' does
       var newInstance = Object.create(proto);
       newInstance.node = newElement('use', instid);
-      use.setHref.call(newInstance.node, iri);
+      fsvg.use.setHref.call(newInstance.node, iri);
 
       return newInstance;
     }
 
     return function (sourcePrototype, methodNames) {
       var instancePrototype = Object.create(GenericShapeProto);
+      // methods from sourcePrototype can be added to the instance prototype
       extend(instancePrototype, sourcePrototype, methodNames);
       makeMethodsWorkOnProperty(instancePrototype, fsvg.use, 'node');
 
@@ -56,12 +57,19 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   }());
 
   var StyleMethods = (function() {
+    /* Helper methods for extending shapes.
+       Also sets up makeInstance to use the methods. */
     var shapelike = {
       setColour: function (colour) {
         retrieve.setStyle.call(this.node, 'fill', colour);
+      },
+      setClip: function (clipObject) {
+        var iri = (typeof clipObject !== 'undefined') ?
+          idiri.funcIRI(clipObject.getId()) : "";
+        retrieve.setStyle.call(this.node, 'clipPath', iri);
       }
     }
-    addInstances(shapelike, ['setColour']);
+    addInstances(shapelike);
 
     var linelike = {
       setThickness: function(thickness) {
@@ -69,9 +77,10 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       },
       setColour: function(colour) {
         retrieve.setStyle.call(this.node, 'stroke', colour);
-      }
+      },
+      setClip: shapelike.setClip
     }
-    addInstances(linelike, ['setThickness', 'setColour']);
+    addInstances(linelike);
 
     return {
       shapelike: shapelike,
@@ -81,6 +90,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
 
   var QRectangle = FlagShapes.QRectangle = (function() {
+    /* Quarter rectangle, with one corner at (0,0) and the other at (w, h). */
     function QRectangle (width, height, id) {
       this.node = newElement('rect', id);
       fsvg.rect.setLocation.call(this.node, 0, 0);
@@ -100,6 +110,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   }());
 
   var WRectangle = FlagShapes.WRectangle = (function() {
+    /* Whole rectangle, centred on (0,0). Takes halfWidth and halfHeight. */
     function WRectangle (halfWidth, halfHeight, id) {
       this.node = newElement('rect', id);
       fsvg.rect.setExtent.call(this.node,
@@ -107,12 +118,12 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     }
     var p = WRectangle.prototype = Object.create(GenericShapeProto);
     p.setHalfWidth = function (halfWidth) {
-      retrieve.length.call(this.node, 'x', -halfWidth);
-      retrieve.length.call(this.node, 'width', halfWidth*2);
+      retrieve.setLength.call(this.node, 'x', -halfWidth);
+      retrieve.setLength.call(this.node, 'width', halfWidth*2);
     }
     p.setHalfHeight = function (halfHeight) {
-      retrieve.length.call(this.node, 'y', -halfHeight);
-      retrieve.length.call(this.node, 'height', halfHeight*2);
+      retrieve.setLength.call(this.node, 'y', -halfHeight);
+      retrieve.setLength.call(this.node, 'height', halfHeight*2);
     }
 
     extend(p, StyleMethods.shapelike);
@@ -120,7 +131,18 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     return WRectangle;
   }());
 
+  var LineGroup = FlagShapes.LineGroup = (function() {
+    /* group of linelike elements */
+    function LineGroup (id) {
+      this.node = newElement('g', id);
+    }
+    var p = LineGroup.prototype = Object.create(GenericShapeProto);
+    MakeMethodsWorkOnProperty(p, fsvg.svge, ['appendObjects']);
+    extend(p, StyleMethods.linelike)
+  }());
+
   var Cross = FlagShapes.Cross = (function() {
+    /* Cross, centred on (0,0). Takes halfWidth and halfHeight. */
     function Cross(halfWidth, halfHeight, id) {
       this.node = newElement('g', id);
 
@@ -140,8 +162,8 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     }
 
     p.setHalfHeight = function(halfHeight) {
-      retrieve.setLength.call(this.hline, 'y1', -halfHeight);
-      retrieve.setLength.call(this.hline, 'y2', halfHeight);
+      retrieve.setLength.call(this.vline, 'y1', -halfHeight);
+      retrieve.setLength.call(this.vline, 'y2', halfHeight);
     }
 
     extend(p, StyleMethods.linelike);
@@ -149,31 +171,23 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     return Cross;
   }());
 
-
-  var QMaskX = FlagShapes.QMaskX = (function() {
-    function QMaskX (width, height, id) {
-      this.node = newElement('polygon', id);
-      // points: (0,0) -> (w, 0) -> (w, h) -> (offset, -offset)
-      fsvg.poly.setByString.call(this.node, [0, 0, width, 0, width, height, 0, 0]);
-      this.widthPoint = this.node.points[1];
-      this.extentPoint = this.node.points[2];
-      this.offsetPoint = this.node.points[3];
+  /* I could alter the QMasks to use two offset points, one for the middle and
+      one for the corners, so it goes
+      (0,0) -> [edge boundary] -> (w,h) -> [cornerOffset] -> [middleOffset],
+      but I don't think that's really necessary here. */
+  var QMaskBase = (function() {
+    // superclass for QMasks. Not strictly necessary in JS, but I find it
+    // neater this way.
+    function QMaskBase (width, height, ex, ey, id) {
+      this.node = newElement('clipPath', id);
+      this.clipShape = newElement('polygon', id+"_shape");
+      fsvg.poly.setByString.call(this.clipShape, [0, 0, ex, ey, width, height, 0, 0]);
+      this.edgePoint = this.clipShape.points[1];
+      this.extentPoint = this.clipShape.points[2];
+      this.offsetPoint = this.clipShape.points[3];
+      this.node.appendChild(this.clipShape);
     }
-    var p = QMaskX.prototype = Object.create(GenericShapeProto);
-
-    p.setColour = function(colour) {
-      retrieve.setStyle.call(this.node, 'fill', colour);
-    }
-
-    p.setWidth = function (width) {
-      this.widthPoint.x = width;
-      this.extentPoint.x = width;
-    }
-
-    p.setHeight = function (height) {
-      this.extentPoint.y = height;s
-    }
-
+    var p = QMaskBase.prototype = Object.create(GenericShapeProto);
     p.setOffset = function (ox, oy) {
       if (typeof oy === 'undefined') {
         oy = -ox;
@@ -181,37 +195,59 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.offsetPoint.x = ox;
       this.offsetPoint.y = oy;
     }
+    p.getShapeId = function () {
+      return this.clipShape.id;
+    }
+    extend(p, StyleMethods.shapelike, ['setClip']);
 
-    extend(p, StyleMethods.shapelike);
+    // Indirect references to clipPaths are not allowed in SVG.
 
+    return QMaskBase;
+  }());
+
+
+  var QMaskX = FlagShapes.QMaskX = (function() {
+    /* Quarter pinwheel mask thing. Basically for countercharging.
+       To use properly, it needs to be clipped/masked with a QRectangle.
+       This version includes the side closer to the x-axis.
+       Takes an 'offset', which alters the shape so the diagonal can be
+       slightly off-centre if that's what's more aesthetically pleasing */
+    function QMaskX (width, height, id) {
+      QMaskBase.call(this, width, height, width, 0, id);
+    }
+    var p = QMaskX.prototype = Object.create(QMaskBase.prototype);
+
+    p.setWidth = function (width) {
+      this.edgePoint.x = width;
+      this.extentPoint.x = width;
+    }
+    p.setHeight = function (height) {
+      this.extentPoint.y = height;
+    }
     return QMaskX;
   }());
 
   var QMaskY = FlagShapes.QMaskY = (function() {
+    /* Like QMaskX, but includes the side closer to the y-axis instead. */
     function QMaskY (width, height, id) {
-      this.node = newElement('polygon', id);
-      // points: (0,0) -> (0, h) -> (w, h) -> (offset, -offset)
-      fsvg.poly.setByString.call(this.node, [0, 0, 0, height, width, height, 0, 0]);
-      this.heightPoint = this.node.points[1];
-      this.extentPoint = this.node.points[2];
-      this.offsetPoint = this.node.points[3];
+      QMaskBase.call(this, width, height, 0, height, id);
     }
-    var p = QMaskY.prototype = Object.create(GenericShapeProto);
-    extend(p, QMaskX.prototype, ['setColour', 'setOffset', 'makeInstance']);
+    var p = QMaskY.prototype = Object.create(QMaskBase.prototype);
 
     p.setWidth = function (width) {
       this.extentPoint.x = width;
     }
-
     p.setHeight = function (height) {
-      this.heightPoint.y = height;
+      this.edgePoint.y = height;
       this.extentPoint.y = height;
     }
-
     return QMaskY
   }());
 
   var SaltireSegment = FlagShapes.SaltireSegment = (function() {
+    /* A quarter of a saltire. Basically, a line running from (0,0) to (w,h).
+       For use with a QRectangle and/or QMask mask or clip.
+       Can also take an offset, which is used instead of (0,0). */
     function SaltireSegment (width, height, id) {
       this.node = newElement('line', id);
       fsvg.line.setExtent.call(this.node, 0, 0, width, height);
@@ -219,10 +255,10 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     var p = SaltireSegment.prototype = Object.create(GenericShapeProto);
 
     p.setWidth = function (width) {
-      retrieve.length.call(this.node, 'x2', width);
+      retrieve.setLength.call(this.node, 'x2', width);
     }
     p.setHeight = function (height) {
-      retrieve.length.call(this.node, 'y2', height);
+      retrieve.setLength.call(this.node, 'y2', height);
     }
     p.setOffset = function (ox, oy) {
       if (typeof oy === 'undefined') {
@@ -232,8 +268,100 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     }
 
     extend(p, StyleMethods.linelike);
-
     return SaltireSegment;
+  }());
+
+  var SubFlag = FlagShapes.SubFlag = (function() {
+    /* SubFlag. Superclass for flags and rectangular flag bits. */
+    function SubFlag (id) {
+      this.node = newElement('svg', id);
+      this.defs = this.node.appendChild(newElement('defs'));
+    }
+    var p = SubFlag.prototype = Object.create(GenericShapeProto);
+    makeMethodsWorkOnProperty(p, fsvg.svge, 'node');
+    p.defsAppend = function () {
+      fsvg.svge.appendObjects.apply(this.defs, arguments);
+    }
+    return SubFlag;
+  }());
+
+  var UnionJack = FlagShapes.UnionJack = (function() {
+    /* The Union Jack. extends SubFlag. */
+    function UnionJack (width, height, id) {
+      // calculate half-lengths
+      var halfWidth = width / 2,
+          halfHeight = height / 2;
+
+      // Set up the svg element.
+      SubFlag.call(this, id);
+      // Set up the ViewBox.
+      this.setViewBox(-halfWidth, -halfHeight, width, height);
+      // create the base shapes.
+      this.baseCross = new Cross(halfWidth, halfHeight, id+"_baseCross");
+      this.baseQRect = new QRectangle(halfWidth, halfHeight, id+"_baseQRect");
+      this.baseWRect = new WRectangle(halfWidth, halfHeight, id+"_baseWRect");
+      this.baseQSalt = new SaltireSegment(halfWidth, halfHeight, id+"_baseQSalt");
+      this.QMaskX = new QMaskX(halfWidth, halfHeight, id+"_QMaskX");
+      this.QMaskY = new QMaskY(halfWidth, halfHeight, id+"_QMaskY");
+
+      this.defsAppend(this.baseCross, this.baseQRect, this.baseWRect,
+        this.baseQSalt, this.QMaskX, this.QMaskY);
+
+      // Create the visible elements.
+      this.field = this.baseWRect.makeInstance(id+"_field");
+      this.georgeFim = this.baseCross.makeInstance(id+"_georgeFim");
+      this.george = this.baseCross.makeInstance(id+"_george")
+
+      this.appendObjects(this.field, this.georgeFim, this.george);
+    }
+    var p = UnionJack.prototype = Object.create(SubFlag.prototype);
+    // TODO: set up a custom stylesheet
+    p.setBlue = function (colour) {
+      this.blue = colour;
+      this.field.setColour(colour);
+    }
+    p.setWhite = function (colour) {
+      this.white = colour;
+      this.georgeFim.setColour(colour);
+    }
+    p.setRed = function (colour) {
+      this.red = colour;
+      this.george.setColour(colour);
+    }
+    p.setWidth = function (width) {
+      this.width = width;
+      var halfWidth = width / 2;
+      this.baseCross.setHalfWidth(halfWidth);
+      this.baseQRect.setWidth(halfWidth);
+      this.baseWRect.setHalfWidth(halfWidth);
+      this.baseQSalt.setWidth(halfWidth);
+      this.QMaskX.setWidth(halfWidth);
+      this.QMaskY.setWidth(halfWidth);
+      this.setViewHalfWidth(halfWidth);
+    }
+    p.setHeight = function (height) {
+      this.height = height;
+      var halfHeight = height / 2;
+      this.baseCross.setHalfHeight(halfHeight);
+      this.baseQRect.setHeight(halfHeight);
+      this.baseWRect.setHalfHeight(halfHeight);
+      this.baseQSalt.setHeight(halfHeight);
+      this.QMaskX.setHeight(halfHeight);
+      this.QMaskY.setHeight(halfHeight);
+      this.setViewHalfHeight(halfHeight);
+    }
+    p.setGeorgeWidth = function (width) {
+      this.georgeWidth = width;
+      this.george.setThickness(width);
+    }
+    p.setGeorgeFimWidth = function (width) {
+      this.georgeFimWidth = width;
+      var thickness = this.georgeWidth + (width*2);
+      this.georgeFim.setThickness(thickness);
+    }
+
+
+    return UnionJack;
   }());
 
 

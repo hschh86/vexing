@@ -123,21 +123,16 @@
      window.onload = function () {
        'use strict';
        window.msvg = document.getElementById('main_svg_object');
-       fsvg.svge.setViewExtent.call(msvg, -30, -15, 30, 15);
 
-       window.field = new FlagShapes.WRectangle(30, 15, 'field');
-       field.setColour('navy');
-       field.appendToNode(msvg);
+      window.uu = new FlagShapes.UnionJack(60, 30, 'uk');
+      uu.setBlue('navy');
+      uu.setRed('red');
+      uu.setWhite('white');
+      uu.setGeorgeWidth(6);
+      uu.setGeorgeFimWidth(2);
 
-       window.georg = new FlagShapes.Cross(30, 15, 'georg');
-       georg.setColour('white');
-       georg.setThickness(10);
-       georg.appendToNode(msvg);
+      uu.appendToNode(msvg);
 
-       window.eng = new FlagShapes.Cross(28, 13, 'eng');
-       eng.setColour('red');
-       eng.setThickness(6);
-       eng.appendToNode(msvg);
 
 
 
