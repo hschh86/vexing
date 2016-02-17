@@ -120,6 +120,21 @@ var fsvg = (function(fsvg) {
     }
   });
 
+  var transforms = fsvg.transforms = freeze({
+    flipX: function() {
+      this.setAttribute('transform', 'scale(-1, 1)');
+    },
+    flipY: function() {
+      this.setAttribute('transform', 'scale( 1,-1)');
+    },
+    flipXY: function() {
+      this.setAttribute('transform', 'scale(-1,-1)')
+    },
+    clear: function() {
+      this.setAttribute('transform', '');
+    }
+  })
+
   var basicSetters = extend({}, retrieve,
      ['setLength', 'setStyle', 'setProperty', 'setAttribute']);
 

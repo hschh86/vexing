@@ -130,17 +130,16 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
     return WRectangle;
   }());
-
+/*
   var LineGroup = FlagShapes.LineGroup = (function() {
-    /* group of linelike elements */
     function LineGroup (id) {
       this.node = newElement('g', id);
     }
     var p = LineGroup.prototype = Object.create(GenericShapeProto);
-    MakeMethodsWorkOnProperty(p, fsvg.svge, ['appendObjects']);
+    makeMethodsWorkOnProperty(p, fsvg.svge, ['appendObjects']);
     extend(p, StyleMethods.linelike)
   }());
-
+*/
   var Cross = FlagShapes.Cross = (function() {
     /* Cross, centred on (0,0). Takes halfWidth and halfHeight. */
     function Cross(halfWidth, halfHeight, id) {
@@ -179,13 +178,11 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     // superclass for QMasks. Not strictly necessary in JS, but I find it
     // neater this way.
     function QMaskBase (width, height, ex, ey, id) {
-      this.node = newElement('clipPath', id);
-      this.clipShape = newElement('polygon', id+"_shape");
-      fsvg.poly.setByString.call(this.clipShape, [0, 0, ex, ey, width, height, 0, 0]);
-      this.edgePoint = this.clipShape.points[1];
-      this.extentPoint = this.clipShape.points[2];
-      this.offsetPoint = this.clipShape.points[3];
-      this.node.appendChild(this.clipShape);
+      this.node = newElement('polygon', id+"_shape");
+      fsvg.poly.setByString.call(this.node, [0, 0, ex, ey, width, height, 0, 0]);
+      this.edgePoint = this.node.points[1];
+      this.extentPoint = this.node.points[2];
+      this.offsetPoint = this.node.points[3];
     }
     var p = QMaskBase.prototype = Object.create(GenericShapeProto);
     p.setOffset = function (ox, oy) {
@@ -195,13 +192,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.offsetPoint.x = ox;
       this.offsetPoint.y = oy;
     }
-    p.getShapeId = function () {
-      return this.clipShape.id;
-    }
-    extend(p, StyleMethods.shapelike, ['setClip']);
-
-    // Indirect references to clipPaths are not allowed in SVG.
-
+    extend(p, StyleMethods.shapelike);
     return QMaskBase;
   }());
 
@@ -251,6 +242,8 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     function SaltireSegment (width, height, id) {
       this.node = newElement('line', id);
       fsvg.line.setExtent.call(this.node, 0, 0, width, height);
+      // TODO: replace this with some sort of cssclass thing
+      retrieve.setStyle.call(this.node, 'strokeLinecap', 'square');
     }
     var p = SaltireSegment.prototype = Object.create(GenericShapeProto);
 
@@ -270,6 +263,51 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     extend(p, StyleMethods.linelike);
     return SaltireSegment;
   }());
+
+
+  var Clipper = FlagShapes.Clipper = (function() {
+    /* wraps ClipPath. */
+    function Clipper (id) {
+      // the rest of the arguments: objects to be contained
+      this.node = newElement('clipPath', id);
+      for (var i=1; i<arguments.length; i++) {
+        arguments[i].appendToNode(this.node);
+      }
+    }
+    var p = Clipper.prototype = Object.create(GenericShapeProto);
+    extend(p, StyleMethods.shapelike, ['setClip']);
+    // <clipPath>s can be clipped, but not cloned.
+
+    // should I use clipper.clip(clipee) or clipee.setClip(clipper)?
+    p.clipNode = function (node) {
+      var iri = idiri.funcIRI(this.node.id);
+      retrieve.setStyle.call(node, 'clipPath', iri)
+    }
+    return Clipper;
+  }());
+
+  var InstanceSaltire = FlagShapes.InstanceSaltire = (function() {
+      function InstanceSaltire (segment, clippers, id) {
+        this.node = newElement('g', id);
+        this.segments = [];
+        for (var i=0; i<4; i++) {
+          var segint = segment.makeInstance(id+"_segment"+i);
+          if (clippers) {
+            var clipper = clippers[i % clippers.length];
+            segint.setClip(clipper);
+          }
+          this.segments.push(segint);
+          segint.appendToNode(this.node);
+        }
+        fsvg.transforms.flipX.call(this.segments[1].node);
+        fsvg.transforms.flipXY.call(this.segments[2].node);
+        fsvg.transforms.flipY.call(this.segments[3].node);
+      }
+      var p = InstanceSaltire.prototype = Object.create(GenericShapeProto);
+      extend(p, StyleMethods.linelike);
+      return InstanceSaltire;
+  }());
+
 
   var SubFlag = FlagShapes.SubFlag = (function() {
     /* SubFlag. Superclass for flags and rectangular flag bits. */
@@ -304,15 +342,29 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.QMaskX = new QMaskX(halfWidth, halfHeight, id+"_QMaskX");
       this.QMaskY = new QMaskY(halfWidth, halfHeight, id+"_QMaskY");
 
-      this.defsAppend(this.baseCross, this.baseQRect, this.baseWRect,
-        this.baseQSalt, this.QMaskX, this.QMaskY);
+      this.clipQRect = new Clipper(id+"_clipQRect", this.baseQRect);
+      this.clipQMaskX = new Clipper(id+"_clipQMaskX", this.QMaskX);
+      this.clipQMaskY = new Clipper(id+"_clipQMaskY", this.QMaskY);
+      this.clipQMaskX.setClip(this.clipQRect);
+      this.clipQMaskY.setClip(this.clipQRect);
+      this.inverted = false;
+
+
+      this.defsAppend(this.baseCross, this.baseWRect, this.baseQSalt,
+        this.clipQRect, this.clipQMaskX, this.clipQMaskY);
 
       // Create the visible elements.
       this.field = this.baseWRect.makeInstance(id+"_field");
       this.georgeFim = this.baseCross.makeInstance(id+"_georgeFim");
       this.george = this.baseCross.makeInstance(id+"_george")
+      this.andrew = new InstanceSaltire(this.baseQSalt,
+        [this.clipQRect], id+"_andrew");
+      this.patrick = new InstanceSaltire(this.baseQSalt,
+        [this.clipQMaskX, this.clipQMaskY], id+"_patrick");
 
-      this.appendObjects(this.field, this.georgeFim, this.george);
+      this.appendObjects(this.field,
+        this.andrew, this.patrick,
+        this.georgeFim, this.george);
     }
     var p = UnionJack.prototype = Object.create(SubFlag.prototype);
     // TODO: set up a custom stylesheet
@@ -323,10 +375,12 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     p.setWhite = function (colour) {
       this.white = colour;
       this.georgeFim.setColour(colour);
+      this.andrew.setColour(colour);
     }
     p.setRed = function (colour) {
       this.red = colour;
       this.george.setColour(colour);
+      this.patrick.setColour(colour);
     }
     p.setWidth = function (width) {
       this.width = width;
@@ -350,14 +404,56 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.QMaskY.setHeight(halfHeight);
       this.setViewHalfHeight(halfHeight);
     }
-    p.setGeorgeWidth = function (width) {
-      this.georgeWidth = width;
-      this.george.setThickness(width);
+    p.setOffset = function (ox, oy) {
+      this.QMaskX.setOffset(ox, oy);
+      this.QMaskY.setOffset(ox, oy);
+      this.baseQSalt.setOffset(ox, oy);
     }
-    p.setGeorgeFimWidth = function (width) {
-      this.georgeFimWidth = width;
-      var thickness = this.georgeWidth + (width*2);
-      this.georgeFim.setThickness(thickness);
+    var _setCrossThickness = function (w) {
+      this.george.setThickness(w);
+    }
+    var _setCrossFim = function (w, f) {
+      var tw = f*2 + w
+      this.georgeFim.setThickness(tw)
+    }
+    p.setCrossThickness = function (w) {
+      this.crossThickness = w;
+      _setCrossThickness.call(this, w);
+      _setCrossFim.call(this, w, this.crossFim);
+    }
+    p.setCrossFim = function (f) {
+      this.crossFim = f;
+      _setCrossFim.call(this, this.crossThickness, f);
+    }
+    var _setSaltireThickness = function (w) {
+      this.patrick.setThickness(w);
+    }
+    var _setSaltireFim = function (w, f) {
+      var tw = Math.max(f, 0)*2 + w;
+      this.andrew.setThickness(tw);
+    }
+    p.setSaltireThickness = function (w) {
+      this.saltireThickness = w;
+      var isnegative = (w < 0);
+      if (isnegative !== this.inverted) {
+        this.setInverted(isnegative);
+      }
+      var aw = Math.abs(w);
+      _setSaltireThickness.call(this, aw);
+      _setSaltireFim.call(this, aw, this.saltireFim);
+    }
+    p.setSaltireFim = function (f) {
+      this.saltireFim = f;
+      _setSaltireFim.call(this, Math.abs(this.saltireThickness), f);
+    }
+    p.setInverted = function (b) {
+      b = !!b;
+      this.inverted = b;
+      if (b) {
+        fsvg.transforms.flipY.call(this.patrick.node);
+      } else {
+        fsvg.transforms.clear.call(this.patrick.node);
+      }
     }
 
 
