@@ -150,8 +150,24 @@
 
       uu.appendToNode(msvg);
 
+      // Experiments With Thing.
+      // use 'change' event for text/number boxes
+      // to prevent changing while still typing
+      // use 'input' for range (slider) for instant feedback
+      // use 'change' for colour selector because having it affect
+      // a different window just looks weird to me.
 
+      // Also note: weird bug on firefox 50.2, GNOME
+      // in which the slider is invisible unless the 'border' style is setSize
+      // (which means it's invisible by default. It still works but you can't see it)
 
+      // quick demo
+      var james = document.querySelector('input[type=range]')
+      james.addEventListener(
+        'input', function (e) {
+          uu.setSaltireFim(james.value)
+        }
+      )
 
 
      }
