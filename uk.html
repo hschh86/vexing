@@ -34,76 +34,73 @@
 
  </head>
  <body>
- <h1> united kingdom of great britain and northern ireland </h1>
-     <div id="svgdiv">
-    <svg id="main_svg_object"
-         xmlns="http://www.w3.org/2000/svg"
-         xmlns:xlink="http://www.w3.org/1999/xlink"
-         width="600" height="300" >
+   <h1> united kingdom of great britain and northern ireland </h1>
+   <div id="svgdiv">
+     <svg id="main_svg_object"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="600" height="300" >
    </svg>
  </div>
 
-<h1> Controls go here. </h1>
-<ul>
-  <li> Just testing out some widgets. Don't mind me...
-    <ul>
-      <li> NUMBER BOX
-        <input type="number" min="0" max="10" step="0.1" value="11">
-      </li>
+ <!-- I'm not sure if this is appropriate here but it'll do -->
+ <div id="flag-controls" class="controls">
+   <fieldset id="dimensions">
+     <legend> Dimensions </legend>
+     <div id="flybox" class="controlbox">
+       <label> Fly: <input class="rangeful" type="number" name="fly"> </label>
+       <!-- <input type="range" value="">
+       Maybe we can programatically add range things somehow-->
+     </div>
+     <div id="hoistbox" class="controlbox">
+       <label> Hoist: <input class="rangeful" type="number" name="hoist"></label>
+     </div>
+     <div id="ratiobox" class="outputbox">
+       <label> Ratio: <output name="ratio"> output </output> </label>
+     </div>
+   </fieldset>
+   <fieldset id="shapes">
+     <legend> Shapes </legend>
+     <fieldset id="saltire">
+       <legend> Saltire </legend>
+       <div id="saltire-patrickbox" class="controlbox">
+         <label> Patrick? <input class="checkbox" name="patrick"></label>
+       </div>
+       <div id="saltire-widthbox" class="controlbox">
+         <label> Width: <input class="rangeful" type="number" name="salitre-width"></label>
+       </div>
+       <div id="saltire-fimbox" class="controlbox">
+         <label> Fimbriation: <input class="rangeful" type="number" name="saltire-fim"></label>
+       </div>
+       <div id="saltire-offsetbox" class="controlbox">
+         <label> Offset: <input class="rangeful" type="number" name="saltire-offset"></label>
+       </div>
+     </fieldset>
+     <fieldset id="cross">
+       <legend> Cross </legend>
+       <div id="cross-widthbox" class="controlbox">
+         <label> Width: <input class="rangeful" type="number" name="cross-width"></label>
+       </div>
+       <div id="cross-fimbox" class="controlbox">
+         <label> Fimbriation: <input class="rangeful" type="number" name="cross-fim"></label>
+       </div>
+     </fieldset>
+   </fieldset>
+   <fieldset id="colours">
+     <legend> Colours </legend>
+     <div id="bluebox" class="controlbox">
+       <label> Blue: <input type="color" name="blue"> </label>
+     </div>
+     <div id="whitebox" class="controlbox">
+       <label> White: <input type="color" name="white"> </label>
+     </div>
+     <div id="redbox" class="controlbox">
+       <label> Red: <input type="color" name="red"> </label>
+     </div>
+   </fieldset>
+ </div>
 
-      <li> SLIDER
-        <input type="range" min="0" max="10" step="1" value="10">
-      </li>
-
-      <li> COLOUR PICKER
-        <input type="color" value="#300080">
-      </li>
-
-      <li> CHECK BOX
-        <input type="checkbox" value="Potato" checked="true"> Some text
-      </li>
-    </ul>
-  </li>
-  <li> Size
-    <ul>
-      <li>Ratio:
-        <ul>
-          <li>width</li>
-          <li>height</li>
-        </ul>
-      </li>
-      <li>unit-scaling</li>
-      <li>Display...</li>
-    </ul>
-  </li>
-  <li> Shape
-    <ul>
-      <li>saltire
-        <ul>
-          <li>Patrick?</li>
-          <li>fim-width</li>
-          <li>width</li>
-          <li>offset</li>
-        </ul>
-      </li>
-      <li>cross
-        <ul>
-          <li>fim-width</li>
-          <li>width</li>
-        </ul>
-      </li>
-    </ul>
-  </li>
-  <li>colour
-    <ul>
-      <li>blue</li>
-      <li>red</li>
-      <li>white</li>
-    </ul>
-  </li>
-</ul>
-
-   <script>
+ <script>
 
      window.onload = function () {
        'use strict';
@@ -142,6 +139,6 @@
 
      }
 
-   </script>
+  </script>
  </body>
 </html>
