@@ -405,9 +405,9 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.setViewHalfHeight(halfHeight);
     }
     p.setOffsetPoint = function (ox, oy) {
-      this.QMaskX.setOffset(ox, oy);
-      this.QMaskY.setOffset(ox, oy);
-      this.baseQSalt.setOffset(ox, oy);
+      this.QMaskX.setOffsetPoint(ox, oy);
+      this.QMaskY.setOffsetPoint(ox, oy);
+      this.baseQSalt.setOffsetPoint(ox, oy);
     }
     var _setCrossThickness = function (w) {
       this.george.setThickness(w);
