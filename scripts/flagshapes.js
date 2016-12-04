@@ -185,7 +185,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.offsetPoint = this.node.points[3];
     }
     var p = QMaskBase.prototype = Object.create(GenericShapeProto);
-    p.setOffset = function (ox, oy) {
+    p.setOffsetPoint = function (ox, oy) {
       if (typeof oy === 'undefined') {
         oy = -ox;
       }
@@ -253,7 +253,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     p.setHeight = function (height) {
       retrieve.setLength.call(this.node, 'y2', height);
     }
-    p.setOffset = function (ox, oy) {
+    p.setOffsetPoint = function (ox, oy) {
       if (typeof oy === 'undefined') {
         oy = -ox;
       }
@@ -404,7 +404,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.QMaskY.setHeight(halfHeight);
       this.setViewHalfHeight(halfHeight);
     }
-    p.setOffset = function (ox, oy) {
+    p.setOffsetPoint = function (ox, oy) {
       this.QMaskX.setOffset(ox, oy);
       this.QMaskY.setOffset(ox, oy);
       this.baseQSalt.setOffset(ox, oy);
