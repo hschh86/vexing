@@ -19,6 +19,10 @@
       body {
         font-family: sans-serif;
       }
+      /*workaround for strange firefox issue*/
+      input[type=range] {
+        background-color: unset;
+      }
 
 
       /* Mask rules. */
@@ -44,15 +48,19 @@
   <li> Just testing out some widgets. Don't mind me...
     <ul>
       <li> NUMBER BOX
-        <input type="number" min="0" max="" step="0.1" value="20">
+        <input type="number" min="0" max="10" step="0.1" value="11">
       </li>
 
       <li> SLIDER
-        <input type="range" min="0" max="10" step="0.1">
+        <input type="range" min="0" max="10" step="1" value="10">
       </li>
 
       <li> COLOUR PICKER
         <input type="color" value="#300080">
+      </li>
+
+      <li> CHECK BOX
+        <input type="checkbox" value="Potato" checked="true"> Some text
       </li>
     </ul>
   </li>
@@ -96,44 +104,6 @@
 </ul>
 
    <script>
-     /*var Vexing = (function() {
-       'use strict';
-
-       var f = {
-         size: {
-           hFly: 30,
-           hHoist: 15,
-           get fFly(){
-             return this.hFly * 2
-           },
-           set fFly(x){
-             this.hFly = x/2
-           },
-           get fHoist(){
-             return this.hHoist * 2
-           },
-           set fHoist(x){
-             this.hHoist = x/2
-           }
-         },
-         saltire: {
-           patrick: true,
-           backWidth: 6,
-           frontWidth: 4,
-           offset: 0,
-         },
-         cross: {
-           backWidth: 10,
-           frontWidth: 6,
-         },
-         colour: {
-           red: "red",
-           blue: "navy",
-           white: "white"
-         }
-       }
-
-     })();*/
 
      window.onload = function () {
        'use strict';
