@@ -10,6 +10,7 @@
 
     <script src="scripts/fsvg.js"></script>
     <script src="scripts/flagshapes.js"></script>
+    <script src="scripts/fcontrols.js"></script>
 
     <!-- Temporary style. -->
     <style>
@@ -22,6 +23,23 @@
       /*workaround for strange firefox issue*/
       input[type=range] {
         background-color: unset;
+      }
+
+      input[type=number] {
+        min-width: 1em;
+        max-width: 3em;
+      }
+
+      .controlbox {
+        display: flex;
+        /*background-color: gray;*/
+      }
+
+      .controlbox label {
+        /*font-family: monospace;*/
+        /*display: inline;*/
+        min-width: 10em;
+        text-align: right;
       }
 
 
@@ -48,12 +66,12 @@
    <fieldset id="dimensions">
      <legend> Dimensions </legend>
      <div id="flybox" class="controlbox rangeful">
-       <label> Fly: <input type="number" name="fly"> </label>
+       <label> Fly: <input type="number" id="fly" name="fly"> </label>
      </div>
      <div id="hoistbox" class="controlbox rangeful">
        <label> Hoist: <input type="number" name="hoist"></label>
      </div>
-     <div id="ratiobox" class="outputbox">
+     <div id="ratiobox" class="controlbox outputbox">
        <label> Ratio: <output name="ratio"> output </output> </label>
      </div>
    </fieldset>
@@ -129,13 +147,15 @@
       // Add Rangeful Sliders
       document.querySelectorAll('.rangeful').forEach(function (node) {
         var spinner = node.querySelector('input[type=number]');
+        // create slider
         var slider = document.createElement('input');
         slider.type = 'range';
-        slider.id = slider.name = spinner.name + "_slider"
-        slider.classList.add('rangeful_slider')
+        slider.id = slider.name = spinner.name + "_slider";
+        slider.classList.add('rangeful_slider');
         slider.min = spinner.min
         slider.max = spinner.max
         slider.value = spinner.value
+        // tie the spinner and slider together
         slider.addEventListener('input', function() {
           spinner.value = slider.value;
         });
@@ -144,7 +164,19 @@
         });
         node.appendChild(slider)
       });
-
+      var tobes = new fcontrols.Rangeful('hola', {
+        label: 'hello',
+        value: 2,
+        min: 1,
+        max: 10,
+        callback: uu.setCrossFim.bind(uu)
+      });
+      var ssea = new fcontrols.Colours('blues', {
+        label: 'The Spaceships Of The Ocean',
+        value: '#feede0',
+        callback: uu.setRed.bind(uu)
+      });
+      tobes.appendMe("#flag-controls")
 
     }
   </script>
