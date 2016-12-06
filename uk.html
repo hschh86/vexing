@@ -14,108 +14,117 @@
 
     <!-- Temporary style. -->
     <style>
+      /*The Box Sizing Thing*/
+      html {
+        box-sizing: border-box;
+      }
+      *, *:before, *:after {
+        box-sizing: inherit;
+      }
+
+      /*Temp styles*/
       #main_svg_object {
-        border: 1px solid black;
+        outline: 1px solid black;
       }
       body {
         font-family: sans-serif;
       }
-      /*workaround for strange firefox issue*/
+
+      /*layouting*/
+      #maindiv {
+        /*display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: stretch;
+        height: 100vh;*/
+
+      }
+
+      #flag-controls {
+        display: flex;
+        align-items: stretch;
+        flex-flow: column nowrap;
+        overflow: scroll;
+        flex: 1 1 50em;
+
+      }
+
+      #svgdiv {
+        padding: 1em;
+      }
+
+      #main_svg_object {
+        width: 100%;
+        height: 100%;
+      }
+
+
+      /*controls*/
       input[type=range] {
+        /*workaround for strange issue*/
         background-color: unset;
       }
 
       input[type=number] {
         min-width: 1em;
-        max-width: 3em;
+        max-width: 4.2em;
+        /*margin: 1em;*/
       }
 
+      input {
+        height: 2em;
+      }
+
+      /*input[type=color]{
+        background-color: black;
+        padding: 0px;
+      }*/
+
+
+      .controlset {
+        max-width: 35em;
+      }
+      /*.controlset legend {
+        border: solid 1px ;
+        border-radius: 2em;
+        padding-left: 1em;
+        padding-right: 1em;
+      }*/
       .controlbox {
         display: flex;
-        /*background-color: gray;*/
+        background-color: pink;
+        margin: 0.2em;
+        height: 3em;
+        align-items: center;
+        padding: 0.5em;
       }
 
       .controlbox label {
-        /*font-family: monospace;*/
-        /*display: inline;*/
-        min-width: 10em;
+        padding-right: 0.5em;
+      }
+
+      .rangeful label, .colours label {
+        min-width: 8em;
         text-align: right;
       }
 
-
-      /* Mask rules. */
-      .solidmask {
-        stroke: none;
-        fill: white;
+      .checkbox label {
+        text-align: left;
       }
     </style>
 
  </head>
  <body>
    <h1> united kingdom of great britain and northern ireland </h1>
-   <div id="svgdiv">
-     <svg id="main_svg_object"
-     xmlns="http://www.w3.org/2000/svg"
-     xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="600" height="300" >
-   </svg>
- </div>
-
- <!-- I'm not sure if this is appropriate here but it'll do -->
- <div id="flag-controls" class="controls">
-   <fieldset id="dimensions">
-     <legend> Dimensions </legend>
-     <div id="flybox" class="controlbox rangeful">
-       <label> Fly: <input type="number" id="fly" name="fly"> </label>
+   <div id="maindiv">
+     <div id="svgdiv">
+       <svg id="main_svg_object"
+       xmlns="http://www.w3.org/2000/svg"
+       xmlns:xlink="http://www.w3.org/1999/xlink"
+       ></svg>
      </div>
-     <div id="hoistbox" class="controlbox rangeful">
-       <label> Hoist: <input type="number" name="hoist"></label>
-     </div>
-     <div id="ratiobox" class="controlbox outputbox">
-       <label> Ratio: <output name="ratio"> output </output> </label>
-     </div>
-   </fieldset>
-   <fieldset id="shapes">
-     <legend> Shapes </legend>
-     <fieldset id="saltire">
-       <legend> Saltire </legend>
-       <div id="saltire-patrickbox" class="controlbox">
-         <label> Patrick? <input type="checkbox" name="patrick"></label>
-       </div>
-       <div id="saltire-widthbox" class="controlbox rangeful">
-         <label> Width: <input type="number" name="salitre-width"></label>
-       </div>
-       <div id="saltire-fimbox" class="controlbox rangeful">
-         <label> Fimbriation: <input type="number" name="saltire-fim"></label>
-       </div>
-       <div id="saltire-offsetbox" class="controlbox rangeful">
-         <label> Offset: <input type="number" name="saltire-offset"></label>
-       </div>
-     </fieldset>
-     <fieldset id="cross">
-       <legend> Cross </legend>
-       <div id="cross-widthbox" class="controlbox rangeful">
-         <label> Width: <input type="number" name="cross-width"></label>
-       </div>
-       <div id="cross-fimbox" class="controlbox rangeful">
-         <label> Fimbriation: <input type="number" name="cross-fim"></label>
-       </div>
-     </fieldset>
-   </fieldset>
-   <fieldset id="colours">
-     <legend> Colours </legend>
-     <div id="bluebox" class="controlbox">
-       <label> Blue: <input type="color" name="blue"> </label>
-     </div>
-     <div id="whitebox" class="controlbox">
-       <label> White: <input type="color" name="white"> </label>
-     </div>
-     <div id="redbox" class="controlbox">
-       <label> Red: <input type="color" name="red"> </label>
-     </div>
-   </fieldset>
- </div>
-
+     <div id="flag-controls" class="controls"></div>
+   </div>
  <script>
 
      window.onload = function () {
@@ -123,61 +132,71 @@
        window.msvg = document.getElementById('main_svg_object');
 
       window.uu = new FlagShapes.UnionJack(60, 30, 'uk');
-      uu.setBlue('navy');
-      uu.setRed('red');
-      uu.setWhite('white');
-      uu.setCrossThickness(6);
-      uu.setCrossFim(2);
-      uu.setSaltireThickness(4);
-      uu.setSaltireFim(1);
-
       uu.appendToNode(msvg);
 
-      // Experiments With Thing.
-      // use 'change' event for text/number boxes
-      // to prevent changing while still typing
-      // use 'input' for range (slider) for instant feedback
-      // use 'change' for colour selector because having it affect
-      // a different window just looks weird to me.
 
-      // Also note: weird bug on firefox 50.2, GNOME
-      // in which the slider is invisible unless the 'border' style is setSize
-      // (which means it's invisible by default. It still works but you can't see it)
-
-      // Add Rangeful Sliders
-      document.querySelectorAll('.rangeful').forEach(function (node) {
-        var spinner = node.querySelector('input[type=number]');
-        // create slider
-        var slider = document.createElement('input');
-        slider.type = 'range';
-        slider.id = slider.name = spinner.name + "_slider";
-        slider.classList.add('rangeful_slider');
-        slider.min = spinner.min
-        slider.max = spinner.max
-        slider.value = spinner.value
-        // tie the spinner and slider together
-        slider.addEventListener('input', function() {
-          spinner.value = slider.value;
-        });
-        spinner.addEventListener('change', function(){
-          slider.value = spinner.value;
-        });
-        node.appendChild(slider)
-      });
-      var tobes = new fcontrols.Rangeful('hola', {
-        label: 'hello',
-        value: 2,
-        min: 1,
-        max: 10,
-        callback: uu.setCrossFim.bind(uu)
-      });
-      var ssea = new fcontrols.Colours('blues', {
-        label: 'The Spaceships Of The Ocean',
-        value: '#feede0',
-        callback: uu.setRed.bind(uu)
-      });
-      tobes.appendMe("#flag-controls")
-
+      // The Great Inputtering
+      window.cc = fcontrols.attachControls(document.getElementById('flag-controls'), [
+        new fcontrols.Controlset('dimensions', 'Dimensions', [
+          new fcontrols.Rangeful('fly', {
+            label: 'Fly', value: 60,
+            min: 1, max: 100, step: 1,
+            callback: uu.setWidth.bind(uu)
+          }),
+          new fcontrols.Rangeful('hoist', {
+            label: 'Hoist', value: 30,
+            min: 1, max: 100, step: 1,
+            callback: uu.setHeight.bind(uu)
+          })
+        ]),
+        new fcontrols.Controlset('saltire', 'Saltire', [
+          new fcontrols.Checkbox('patrick', {
+            label: 'Patrick', value: true,
+            callback: uu.setPatrickVisibility.bind(uu)
+          }),
+          new fcontrols.Rangeful('salt-width', {
+            label: 'Width', value: 4,
+            min: -50, max: 50, step: 1,
+            callback: uu.setSaltireThickness.bind(uu)
+          }),
+          new fcontrols.Rangeful('salt-fim', {
+            label: 'Fimbriation', value: 1,
+            min: 0, max: 50, step: 1,
+            callback: uu.setSaltireFim.bind(uu)
+          }),
+          new fcontrols.Rangeful('salt-offset', {
+            label: 'Offset', value: 0,
+            min: -1, max: 1, step: 0.01,
+            callback: uu.setOffset.bind(uu)
+          })
+        ]),
+        new fcontrols.Controlset('cross', 'Cross', [
+          new fcontrols.Rangeful('cross-width', {
+            label: 'Width', value: 6,
+            min: 0, max: 50, step: 1,
+            callback: uu.setCrossThickness.bind(uu)
+          }),
+          new fcontrols.Rangeful('cross-fim', {
+            label: 'Fimbriation', value: 2,
+            min: 0, max: 50, step: 1,
+            callback: uu.setCrossFim.bind(uu)
+          })
+        ]),
+        new fcontrols.Controlset('colours', 'Colours', [
+          new fcontrols.Colours('blue', {
+            label: 'Blue', value: '#000080',
+            callback: uu.setBlue.bind(uu)
+          }),
+          new fcontrols.Colours('white', {
+            label: 'White', value: '#ffffff',
+            callback: uu.setWhite.bind(uu)
+          }),
+          new fcontrols.Colours('red', {
+            label: 'Red', value: '#ff0000',
+            callback: uu.setRed.bind(uu)
+          })
+        ])
+      ])
     }
   </script>
  </body>

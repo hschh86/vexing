@@ -154,6 +154,12 @@ var fsvg = (function(fsvg) {
     }
   });
 
+  var genericshape = fsvg.genericshape = freeze({
+    setVisibility: function(b) {
+      retrieve.setStyle.call(this, 'visibility', b ? 'visible' : 'hidden');
+    }
+  })
+
   var basicshape = fsvg.basicshape = freeze({
     setLocation: function (x, y) {
       retrieve.setLength.call(this, 'x', x);

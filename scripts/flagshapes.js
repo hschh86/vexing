@@ -16,7 +16,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     methodNames.forEach(function (methodName) {
       var sourceMethod = source[methodName];
       if (sourceMethod) {
-          reciever[methodName] = function () {
+        reciever[methodName] = function () {
           // this[propertyName] is usually this.node
           return sourceMethod.apply(this[propertyName], arguments);
         }
@@ -26,6 +26,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   }
 
   var GenericShapeProto = makeMethodsWorkOnProperty({}, fsvg.generic, 'node');
+  makeMethodsWorkOnProperty(GenericShapeProto, fsvg.genericshape, 'node');
   /* Implements things like setId, getOwnerSVG, appendToNode etc */
 
   var addInstances = (function() {
@@ -454,6 +455,15 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       } else {
         fsvg.transforms.clear.call(this.patrick.node);
       }
+    }
+    p.setPatrickVisibility = function (b) {
+      this.patrickVisiblity = !!b;
+      this.patrick.setVisibility(b);
+    }
+    p.setOffset = function (n) {
+      var ox = n/2 * this.height;
+      var oy = -n/2 * this.width;
+      this.setOffsetPoint(ox, oy);
     }
 
 
