@@ -89,6 +89,17 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     }
   }());
 
+  var BasicGroup = FlagShapes.BasicGroup = (function() {
+    /* A group, or 'g' element. */
+    function BasicGroup (id) {
+      this.node = newElement('g', id);
+    }
+    var p = BasicGroup.prototype = Object.create(GenericShapeProto);
+    makeMethodsWorkOnProperty(p, fsvg.svge, 'node', ['appendObjects']);
+    p.setClip = StyleMethods.linelike.setClip;
+
+    return BasicGroup;
+  }());
 
   var QRectangle = FlagShapes.QRectangle = (function() {
     /* Quarter rectangle, with one corner at (0,0) and the other at (w, h). */
@@ -350,22 +361,28 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.clipQMaskY.setClip(this.clipQRect);
       this.inverted = false;
 
+      this.clipWRect = new Clipper(id+"_clipWRect", this.baseWRect);
 
-      this.defsAppend(this.baseCross, this.baseWRect, this.baseQSalt,
-        this.clipQRect, this.clipQMaskX, this.clipQMaskY);
+
+      this.defsAppend(this.baseCross, this.baseQSalt,
+        this.clipQRect, this.clipQMaskX, this.clipQMaskY, this.clipWRect);
 
       // Create the visible elements.
+      this.flagBase = new BasicGroup(id+"_flag");
+      this.flagBase.setClip(this.clipWRect);
+
       this.field = this.baseWRect.makeInstance(id+"_field");
       this.georgeFim = this.baseCross.makeInstance(id+"_georgeFim");
-      this.george = this.baseCross.makeInstance(id+"_george")
+      this.george = this.baseCross.makeInstance(id+"_george");
       this.andrew = new InstanceSaltire(this.baseQSalt,
         [this.clipQRect], id+"_andrew");
       this.patrick = new InstanceSaltire(this.baseQSalt,
         [this.clipQMaskX, this.clipQMaskY], id+"_patrick");
 
-      this.appendObjects(this.field,
+      this.flagBase.appendObjects(this.field,
         this.andrew, this.patrick,
         this.georgeFim, this.george);
+      this.appendObjects(this.flagBase);
     }
     var p = UnionJack.prototype = Object.create(SubFlag.prototype);
     // TODO: set up a custom stylesheet
