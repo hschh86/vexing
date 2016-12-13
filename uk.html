@@ -23,40 +23,56 @@
       }
 
       /*Temp styles*/
-      #main_svg_object {
-        outline: 1px solid black;
-      }
+
       body {
         font-family: sans-serif;
       }
 
       /*layouting*/
-      #maindiv {
-        /*display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: stretch;
-        height: 100vh;*/
 
+      html, body {
+        height: 100%;
+        margin: 0px;
       }
 
-      #flag-controls {
+      .fullbox {
+        height: 100%;
         display: flex;
-        align-items: stretch;
         flex-flow: column nowrap;
-        overflow: scroll;
-        flex: 1 1 50em;
+      }
+
+      .fullbox-header {
+        background-color: gold;
+      }
+
+      .fullbox-contents {
+        display: flex;
+        flex-flow: row nowrap;
+        flex: auto;
+        min-height: 0px;
 
       }
 
-      #svgdiv {
+      .fullbox-mainpane {
+        flex: auto;
+        background-color: lightgrey;
         padding: 1em;
+      }
+
+      .fullbox-sidebar {
+        flex: none;
+        min-height: 0px;
+        overflow-y: scroll;
+        padding: 1em;
+        background-color: beige;
       }
 
       #main_svg_object {
         width: 100%;
         height: 100%;
       }
+
+
 
 
       /*controls*/
@@ -114,16 +130,19 @@
     </style>
 
  </head>
- <body>
-   <h1> united kingdom of great britain and northern ireland </h1>
-   <div id="maindiv">
-     <div id="svgdiv">
+ <body class="fullbox">
+   <header class="fullbox-header">
+     united kingdom of great britain and northern ireland
+   </header>
+   <div class="fullbox-contents">
+     <div class="fullbox-mainpane">
        <svg id="main_svg_object"
        xmlns="http://www.w3.org/2000/svg"
-       xmlns:xlink="http://www.w3.org/1999/xlink"
-       ></svg>
+       xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
      </div>
-     <div id="flag-controls" class="controls"></div>
+     <div class="fullbox-sidebar">
+       <div id="flag-controls" class="controls"></div>
+     </div>
    </div>
  <script>
 
@@ -161,7 +180,7 @@
           }),
           new fcontrols.Rangeful('salt-fim', {
             label: 'Fimbriation', value: 1,
-            min: 0, max: 50, step: 1,
+            min: 0, max: 25, step: 1,
             callback: uu.setSaltireFim.bind(uu)
           }),
           new fcontrols.Rangeful('salt-offset', {
@@ -178,7 +197,7 @@
           }),
           new fcontrols.Rangeful('cross-fim', {
             label: 'Fimbriation', value: 2,
-            min: 0, max: 50, step: 1,
+            min: 0, max: 25, step: 1,
             callback: uu.setCrossFim.bind(uu)
           })
         ]),
