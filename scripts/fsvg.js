@@ -157,6 +157,11 @@ var fsvg = (function(fsvg) {
   var genericshape = fsvg.genericshape = freeze({
     setVisibility: function(b) {
       retrieve.setStyle.call(this, 'visibility', b ? 'visible' : 'hidden');
+    },
+    setClip: function (clipObject) {
+      var iri = (typeof clipObject !== 'undefined') ?
+        idiri.funcIRI(clipObject.getId()) : "";
+      retrieve.setStyle.call(this, 'clipPath', iri);
     }
   })
 
@@ -180,13 +185,13 @@ var fsvg = (function(fsvg) {
 
   var svge = fsvg.svge = (function() {
     var svge = {};
-    var setViewBox = svge.setViewBox = function (x, y, width, height) {
-      this.setAttribute('viewBox', [x, y, width, height]);
-    }
-    svge.setViewExtent = function (x1, y1, x2, y2) {
-      var LS = extentToLS(x1, y1, x2, y2);
-      setViewBox.call(this, LS.x, LS.y, LS.width, LS.height);
-    }
+    // var setViewBox = svge.setViewBox = function (x, y, width, height) {
+    //   this.setAttribute('viewBox', [x, y, width, height]);
+    // }
+    // svge.setViewExtent = function (x1, y1, x2, y2) {
+    //   var LS = extentToLS(x1, y1, x2, y2);
+    //   setViewBox.call(this, LS.x, LS.y, LS.width, LS.height);
+    // }
     svge.setViewHalfWidth = function (halfWidth) {
       this.viewBox.baseVal.x = -halfWidth;
       this.viewBox.baseVal.width = halfWidth * 2;

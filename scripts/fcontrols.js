@@ -85,8 +85,8 @@ var fcontrols = (function(fcontrols) {
         id: id+'_label',
         htmlFor: widget.id
       });
-      this.elem.appendChild(widget);
       this.elem.appendChild(label);
+      this.elem.appendChild(widget);
     }
     Checkbox.prototype = Object.create(Control.prototype);
     return Checkbox;

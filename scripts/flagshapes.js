@@ -63,11 +63,6 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     var shapelike = {
       setColour: function (colour) {
         retrieve.setStyle.call(this.node, 'fill', colour);
-      },
-      setClip: function (clipObject) {
-        var iri = (typeof clipObject !== 'undefined') ?
-          idiri.funcIRI(clipObject.getId()) : "";
-        retrieve.setStyle.call(this.node, 'clipPath', iri);
       }
     }
     addInstances(shapelike);
@@ -78,8 +73,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       },
       setColour: function(colour) {
         retrieve.setStyle.call(this.node, 'stroke', colour);
-      },
-      setClip: shapelike.setClip
+      }
     }
     addInstances(linelike);
 
@@ -87,18 +81,6 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       shapelike: shapelike,
       linelike: linelike
     }
-  }());
-
-  var BasicGroup = FlagShapes.BasicGroup = (function() {
-    /* A group, or 'g' element. */
-    function BasicGroup (id) {
-      this.node = newElement('g', id);
-    }
-    var p = BasicGroup.prototype = Object.create(GenericShapeProto);
-    makeMethodsWorkOnProperty(p, fsvg.svge, 'node', ['appendObjects']);
-    p.setClip = StyleMethods.linelike.setClip;
-
-    return BasicGroup;
   }());
 
   var QRectangle = FlagShapes.QRectangle = (function() {
@@ -287,7 +269,6 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       }
     }
     var p = Clipper.prototype = Object.create(GenericShapeProto);
-    extend(p, StyleMethods.shapelike, ['setClip']);
     // <clipPath>s can be clipped, but not cloned.
 
     // should I use clipper.clip(clipee) or clipee.setClip(clipper)?
@@ -323,14 +304,33 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
   var SubFlag = FlagShapes.SubFlag = (function() {
     /* SubFlag. Superclass for flags and rectangular flag bits. */
+    // AMENDED. TODO: Complete Restructure.
     function SubFlag (id) {
-      this.node = newElement('svg', id);
-      this.defs = this.node.appendChild(newElement('defs'));
+      this.svgnode = newElement('svg', id);
+      this.svgnode.setAttribute('viewBox', '0 0 0 0')
+      this.node = newElement('g', id+"_flag");
+      this.defs = this.svgnode.appendChild(newElement('defs'));
+      this.baseWRect = new WRectangle(0, 0, id+"_baseWRect");
+      this.clipWRect = new Clipper(id+"_clipWRect", this.baseWRect);
+      this.setClip(this.clipWRect); // redo this
+      this.defsAppend(this.clipWRect);
+      this.svgnode.appendChild(this.node);
     }
     var p = SubFlag.prototype = Object.create(GenericShapeProto);
-    makeMethodsWorkOnProperty(p, fsvg.svge, 'node');
+    makeMethodsWorkOnProperty(p, fsvg.svge, 'node', ['appendObjects']);
+    p.setViewHalfWidth = function (halfWidth) {
+      fsvg.svge.setViewHalfWidth.call(this.svgnode, halfWidth);
+      this.baseWRect.setHalfWidth(halfWidth);
+    }
+    p.setViewHalfHeight = function (halfHeight) {
+      fsvg.svge.setViewHalfHeight.call(this.svgnode, halfHeight);
+      this.baseWRect.setHalfHeight(halfHeight);
+    }
     p.defsAppend = function () {
       fsvg.svge.appendObjects.apply(this.defs, arguments);
+    }
+    p.appendToNode = function () {
+      fsvg.generic.appendToNode.apply(this.svgnode, arguments);
     }
     return SubFlag;
   }());
@@ -345,11 +345,11 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       // Set up the svg element.
       SubFlag.call(this, id);
       // Set up the ViewBox.
-      this.setViewBox(-halfWidth, -halfHeight, width, height);
+      this.setViewHalfWidth(halfWidth);
+      this.setViewHalfHeight(halfHeight);
       // create the base shapes.
       this.baseCross = new Cross(halfWidth, halfHeight, id+"_baseCross");
       this.baseQRect = new QRectangle(halfWidth, halfHeight, id+"_baseQRect");
-      this.baseWRect = new WRectangle(halfWidth, halfHeight, id+"_baseWRect");
       this.baseQSalt = new SaltireSegment(halfWidth, halfHeight, id+"_baseQSalt");
       this.QMaskX = new QMaskX(halfWidth, halfHeight, id+"_QMaskX");
       this.QMaskY = new QMaskY(halfWidth, halfHeight, id+"_QMaskY");
@@ -361,15 +361,9 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.clipQMaskY.setClip(this.clipQRect);
       this.inverted = false;
 
-      this.clipWRect = new Clipper(id+"_clipWRect", this.baseWRect);
-
-
       this.defsAppend(this.baseCross, this.baseQSalt,
-        this.clipQRect, this.clipQMaskX, this.clipQMaskY, this.clipWRect);
+        this.clipQRect, this.clipQMaskX, this.clipQMaskY);
 
-      // Create the visible elements.
-      this.flagBase = new BasicGroup(id+"_flag");
-      this.flagBase.setClip(this.clipWRect);
 
       this.field = this.baseWRect.makeInstance(id+"_field");
       this.georgeFim = this.baseCross.makeInstance(id+"_georgeFim");
@@ -379,10 +373,9 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.patrick = new InstanceSaltire(this.baseQSalt,
         [this.clipQMaskX, this.clipQMaskY], id+"_patrick");
 
-      this.flagBase.appendObjects(this.field,
+      this.appendObjects(this.field,
         this.andrew, this.patrick,
         this.georgeFim, this.george);
-      this.appendObjects(this.flagBase);
     }
     var p = UnionJack.prototype = Object.create(SubFlag.prototype);
     // TODO: set up a custom stylesheet
