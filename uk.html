@@ -150,6 +150,17 @@
       window.uu = new FlagShapes.UnionJack('uk');
       uu.appendToNode(msvg);
 
+      var sensible_ranges = function (controls) {
+        // redo this later
+          var x = Math.min(uu.width, uu.height);
+          var hx = Math.ceil(x/2);
+          controls['cross-width'].setMax(x);
+          controls['cross-fim'].setMax(hx);
+          controls['salt-width'].setMax(x);
+          controls['salt-width'].setMin(-x);
+          controls['salt-fim'].setMax(hx);
+      }
+
 
       // The Great Inputtering
       window.cc = fcontrols.attachControls(document.getElementById('flag-controls'), [
@@ -157,59 +168,83 @@
           new fcontrols.Rangeful('fly', {
             label: 'Fly', value: 60,
             min: 1, max: 100, step: 1,
-            callback: uu.setWidth.bind(uu)
+            onValue: function (self) {
+              uu.setWidth(self.value);
+              sensible_ranges(self.controls);
+            }
           }),
           new fcontrols.Rangeful('hoist', {
             label: 'Hoist', value: 30,
             min: 1, max: 100, step: 1,
-            callback: uu.setHeight.bind(uu)
+            onValue: function (self) {
+              uu.setHeight(self.value);
+              sensible_ranges(self.controls);
+            }
           })
         ]),
         new fcontrols.Controlset('saltire', 'Saltire', [
           new fcontrols.Checkbox('patrick', {
             label: 'Patrick', value: true,
-            callback: uu.setPatrickVisibility.bind(uu)
+            onValue: function (self) {
+              uu.setPatrickVisibility(self.value);
+            }
           }),
           new fcontrols.Rangeful('salt-width', {
             label: 'Width', value: 4,
             min: -50, max: 50, step: 1,
-            callback: uu.setSaltireThickness.bind(uu)
+            onValue: function (self) {
+              uu.setSaltireThickness(self.value);
+            }
           }),
           new fcontrols.Rangeful('salt-fim', {
             label: 'Fimbriation', value: 1,
             min: 0, max: 25, step: 1,
-            callback: uu.setSaltireFim.bind(uu)
+            onValue: function (self) {
+              uu.setSaltireFim(self.value);
+            }
           }),
           new fcontrols.Rangeful('salt-offset', {
             label: 'Offset', value: 0,
             min: -1, max: 1, step: 0.01,
-            callback: uu.setOffset.bind(uu)
+            onValue: function (self) {
+              uu.setOffset(self.value);
+            }
           })
         ]),
         new fcontrols.Controlset('cross', 'Cross', [
           new fcontrols.Rangeful('cross-width', {
             label: 'Width', value: 6,
             min: 0, max: 50, step: 1,
-            callback: uu.setCrossThickness.bind(uu)
+            onValue: function (self) {
+              uu.setCrossThickness(self.value);
+            }
           }),
           new fcontrols.Rangeful('cross-fim', {
             label: 'Fimbriation', value: 2,
             min: 0, max: 25, step: 1,
-            callback: uu.setCrossFim.bind(uu)
+            onValue: function (self) {
+              uu.setCrossFim(self.value);
+            }
           })
         ]),
         new fcontrols.Controlset('colours', 'Colours', [
           new fcontrols.Colours('blue', {
             label: 'Blue', value: '#000080',
-            callback: uu.setBlue.bind(uu)
+            onValue: function (self) {
+              uu.setBlue(self.value);
+            }
           }),
           new fcontrols.Colours('white', {
             label: 'White', value: '#ffffff',
-            callback: uu.setWhite.bind(uu)
+            onValue: function (self) {
+              uu.setWhite(self.value);
+            }
           }),
           new fcontrols.Colours('red', {
             label: 'Red', value: '#ff0000',
-            callback: uu.setRed.bind(uu)
+            onValue: function (self) {
+              uu.setRed(self.value);
+            }
           })
         ])
       ])

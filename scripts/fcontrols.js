@@ -3,6 +3,20 @@
 var fcontrols = (function(fcontrols) {
   'use strict';
 
+
+  /* So, how is this going to work?
+  Control Interface.
+  Each as a 'onValue' callback.
+  When the associated DOM event happens, this.onValue(this) is executed.
+  first argument of the callback is the Control. by default,
+  'this' is also the control but it can be bound. probably.
+  Each control has a value, accessed by 'value' property.
+  There may be other properties.
+  The Control object is the Source Of Truth, not any DOM nodes.*/
+
+
+
+
   var newElement = function (tag, props) {
     // Lazy way to configure some properties when creating element
     var elem = document.createElement(tag);
@@ -33,40 +47,38 @@ var fcontrols = (function(fcontrols) {
     return Control
   }());
 
-  var newCallbackWidget = function (id, type, value_prop, event_name, initial_value, callback) {
-    // Lazy way to create a input element and then assign a callback on each change
-    var widget = newElement('input', {
-      id: id,
-      type: type,
-    });
-    widget[value_prop] = initial_value;
-    widget.addEventListener(event_name, function () {
-      callback(widget[value_prop]);
-    });
-    callback(initial_value);
-    return widget;
-  }
-
-
   var Colours = fcontrols.Colours = (function() {
     function Colours (id, options) {
       // wraps the colour picker widget.
       // options.callback executed on 'change' event, with argument colour
       Control.call(this, id);
       this.elem.classList.add('colours');
-      var callback = this.callback = options.callback;
-      var widget = this.widget = newCallbackWidget(
-        id+'_widget', 'color', 'value', 'change', options.value, callback
-      );
-      var label = this.label = newElement('label', {
+      this.onValue = options.onValue;
+      this.widget = newElement('input', {
+        id: id+'_widget',
+        type: 'color',
+      });
+      this.widget.addEventListener('change', function () {
+        this.setValue(this.widget.value);
+      }.bind(this));
+
+      this.label = newElement('label', {
         textContent: options.label,
         id: id+'_label',
-        htmlFor: widget.id
+        htmlFor: this.widget.id
       });
-      this.elem.appendChild(label);
-      this.elem.appendChild(widget);
+      this.elem.appendChild(this.label);
+      this.elem.appendChild(this.widget);
+
+      this.revaluate = function () {
+        this.setValue(options.value);
+      }
     }
-    Colours.prototype = Object.create(Control.prototype);
+    var p = Colours.prototype = Object.create(Control.prototype);
+    p.setValue = function (value) {
+      this.value = this.widget.value = value;
+      this.onValue(this);
+    }
     return Colours;
   }());
 
@@ -76,19 +88,31 @@ var fcontrols = (function(fcontrols) {
       // options.callback executed on 'change' event, argument bool as string
       Control.call(this, id);
       this.elem.classList.add('checkbox');
-      var callback = this.callback = options.callback;
-      var widget = this.widget = newCallbackWidget(
-        id+'_widget', 'checkbox', 'checked', 'change', options.value, callback
-      );
+      this.onValue = options.onValue;
+      this.widget = newElement('input', {
+        id: id+'_widget',
+        type: 'checkbox',
+      });
+      this.widget.addEventListener('change', function () {
+        this.setValue(this.widget.checked);
+      }.bind(this));
       var label = this.label = newElement('label', {
         textContent: options.label,
         id: id+'_label',
-        htmlFor: widget.id
+        htmlFor: this.widget.id
       });
-      this.elem.appendChild(label);
-      this.elem.appendChild(widget);
+      this.elem.appendChild(this.label);
+      this.elem.appendChild(this.widget);
+
+      this.revalueate = function () {
+        this.setValue(options.value);
+      }
     }
-    Checkbox.prototype = Object.create(Control.prototype);
+    var p = Checkbox.prototype = Object.create(Control.prototype);
+    p.setValue = function (value) {
+      this.value = this.widget.checked = !!value;
+      this.onValue(this);
+    }
     return Checkbox;
   }());
 
@@ -99,59 +123,59 @@ var fcontrols = (function(fcontrols) {
       // Incomplete for now, but it sorta works.
       Control.call(this, id);
       this.elem.classList.add('rangeful')
-      var spinner = this.spinner = newElement('input', {
+      this.onValue = options.onValue;
+      this.spinner = newElement('input', {
         id: id+"_spinner",
         type: 'number',
-        value: options.value,
       });
-      var slider = this.slider = newElement('input', {
+      this.slider = newElement('input', {
         id: id+"_slider",
         type: 'range',
-        value: options.value,
       });
-      this.setMin(options.min);
-      this.setMax(options.max);
-      this.setStep(options.step);
 
-      var callback = this.callback = options.callback;
 
-      spinner.addEventListener('change', function() {
-        slider.value = spinner.value;
-        callback(Number(spinner.value));
-      });
-      slider.addEventListener('input', function() {
-        spinner.value = slider.value;
-        callback(Number(slider.value));
-      });
-      var label = this.label = newElement('label', {
+      this.spinner.addEventListener('change', function() {
+        this.setValue(this.spinner.value);
+      }.bind(this));
+      this.slider.addEventListener('input', function() {
+        this.setValue(this.slider.value);
+      }.bind(this));
+      this.label = newElement('label', {
         textContent: options.label,
         id: id+'_label',
-        htmlFor: spinner.id
+        htmlFor: this.spinner.id
       });
-      callback(Number(options.value));
 
-      this.elem.appendChild(label);
-      this.elem.appendChild(spinner);
-      this.elem.appendChild(slider);
+      this.elem.appendChild(this.label);
+      this.elem.appendChild(this.spinner);
+      this.elem.appendChild(this.slider);
+
+      this.revaluate = function () {
+        this.setMin(options.min);
+        this.setMax(options.max);
+        this.setStep(options.step);
+        this.setValue(options.value);
+      }
     }
     var p = Rangeful.prototype = Object.create(Control.prototype);
+    p._reassert_value = function () {
+      this.slider.value = this.spinner.value = this.value;
+    }
     p.setMin = function (min) {
-      this.spinner.min = min;
-      this.slider.min = min;
+      this.min = this.spinner.min = this.slider.min = +min;
+      this._reassert_value();
     }
     p.setMax = function (max) {
-      this.spinner.max = max;
-      this.slider.max = max;
+      this.max = this.spinner.max = this.slider.max = +max;
+      this._reassert_value();
     }
     p.setStep = function (step) {
-      this.spinner.step = step;
-      this.slider.step = step;
+      this.step = this.spinner.step = this.slider.step = +step;
+      this._reassert_value();
     }
     p.setValue = function (value) {
-      value = Number(value);
-      this.spinner.value = value;
-      this.slider.value = value;
-      this.callback(value);
+      this.value = this.spinner.value = this.slider.value = +value;
+      this.onValue(this);
     }
     return Rangeful;
   }());
@@ -176,6 +200,7 @@ var fcontrols = (function(fcontrols) {
     var p = ControlCollection.prototype;
     p.addChild = function (child) {
       this.children[child.id] = child;
+      this[child.id] = child;
       this.childList.push(child);
       this.elem.appendChild(child.elem);
       return this;
@@ -184,6 +209,26 @@ var fcontrols = (function(fcontrols) {
       // where children is an array.
       children.forEach(p.addChild.bind(this));
       return this;
+    }
+    p.revaluate = function () {
+      // Probably not the best way to do this......
+      this.childList.forEach(function (child) {
+        if (typeof child.revaluate === 'function') {
+          child.revaluate();
+        }
+      });
+    }
+    p.blegister = function (census) {
+      // I KNOW this isn't the best way to do it!
+      census = census || {};
+      this.childList.forEach(function (child) {
+        child.controls = census;
+        census[child.id] = child;
+        if (typeof child.blegister === 'function') {
+          child.blegister(census);
+        }
+      });
+      return census
     }
     return ControlCollection;
   }());
@@ -205,6 +250,9 @@ var fcontrols = (function(fcontrols) {
     bunch.addChildren(children);
     node.appendChild(bunch.elem)
     bunch.elem = null;
+    bunch.controls = bunch.blegister();
+    bunch.revaluate();
+
     return bunch
   }
 
