@@ -85,7 +85,10 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
   var QRectangle = FlagShapes.QRectangle = (function() {
     /* Quarter rectangle, with one corner at (0,0) and the other at (w, h). */
-    function QRectangle (width, height, id) {
+    function QRectangle (id, width, height) {
+      width = width || 0;
+      height = height || 0;
+
       this.node = newElement('rect', id);
       fsvg.rect.setLocation.call(this.node, 0, 0);
       fsvg.rect.setSize.call(this.node, width, height);
@@ -105,7 +108,10 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
   var WRectangle = FlagShapes.WRectangle = (function() {
     /* Whole rectangle, centred on (0,0). Takes halfWidth and halfHeight. */
-    function WRectangle (halfWidth, halfHeight, id) {
+    function WRectangle (id, halfWidth, halfHeight) {
+      halfWidth = halfWidth || 0;
+      halfHeight = halfHeight || 0;
+
       this.node = newElement('rect', id);
       fsvg.rect.setExtent.call(this.node,
         -halfWidth, -halfHeight, halfWidth, halfHeight);
@@ -124,25 +130,18 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
     return WRectangle;
   }());
-/*
-  var LineGroup = FlagShapes.LineGroup = (function() {
-    function LineGroup (id) {
-      this.node = newElement('g', id);
-    }
-    var p = LineGroup.prototype = Object.create(GenericShapeProto);
-    makeMethodsWorkOnProperty(p, fsvg.svge, ['appendObjects']);
-    extend(p, StyleMethods.linelike)
-  }());
-*/
+
   var Cross = FlagShapes.Cross = (function() {
     /* Cross, centred on (0,0). Takes halfWidth and halfHeight. */
-    function Cross(halfWidth, halfHeight, id) {
+    function Cross(id, halfWidth, halfHeight) {
+      halfWidth = halfWidth || 0;
+      halfHeight = halfHeight || 0;
+
       this.node = newElement('g', id);
 
       // create the two lines
       this.hline = this.node.appendChild(newElement('line'));
       fsvg.line.setExtent.call(this.hline, -halfWidth, 0, halfWidth, 0);
-
 
       this.vline = this.node.appendChild(newElement('line'));
       fsvg.line.setExtent.call(this.vline, 0, -halfHeight, 0, halfHeight);
@@ -171,7 +170,12 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   var QMaskBase = (function() {
     // superclass for QMasks. Not strictly necessary in JS, but I find it
     // neater this way.
-    function QMaskBase (width, height, ex, ey, id) {
+    function QMaskBase (id, width, height, ex, ey) {
+      width = width || 0;
+      height = height || 0;
+      ex = ex || 0;
+      ey = ey || 0;
+
       this.node = newElement('polygon', id+"_shape");
       fsvg.poly.setByString.call(this.node, [0, 0, ex, ey, width, height, 0, 0]);
       this.edgePoint = this.node.points[1];
@@ -197,8 +201,8 @@ var FlagShapes = (function(FlagShapes, fsvg) {
        This version includes the side closer to the x-axis.
        Takes an 'offset', which alters the shape so the diagonal can be
        slightly off-centre if that's what's more aesthetically pleasing */
-    function QMaskX (width, height, id) {
-      QMaskBase.call(this, width, height, width, 0, id);
+    function QMaskX (id, width, height) {
+      QMaskBase.call(this, id, width, height, width, 0);
     }
     var p = QMaskX.prototype = Object.create(QMaskBase.prototype);
 
@@ -214,8 +218,8 @@ var FlagShapes = (function(FlagShapes, fsvg) {
 
   var QMaskY = FlagShapes.QMaskY = (function() {
     /* Like QMaskX, but includes the side closer to the y-axis instead. */
-    function QMaskY (width, height, id) {
-      QMaskBase.call(this, width, height, 0, height, id);
+    function QMaskY (id, width, height) {
+      QMaskBase.call(this, id, width, height, 0, height);
     }
     var p = QMaskY.prototype = Object.create(QMaskBase.prototype);
 
@@ -233,7 +237,10 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     /* A quarter of a saltire. Basically, a line running from (0,0) to (w,h).
        For use with a QRectangle and/or QMask mask or clip.
        Can also take an offset, which is used instead of (0,0). */
-    function SaltireSegment (width, height, id) {
+    function SaltireSegment (id, width, height) {
+      width = width || 0;
+      height = height || 0;
+
       this.node = newElement('line', id);
       fsvg.line.setExtent.call(this.node, 0, 0, width, height);
       // TODO: replace this with some sort of cssclass thing
@@ -280,7 +287,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   }());
 
   var InstanceSaltire = FlagShapes.InstanceSaltire = (function() {
-      function InstanceSaltire (segment, clippers, id) {
+      function InstanceSaltire (id, segment, clippers) {
         this.node = newElement('g', id);
         this.segments = [];
         for (var i=0; i<4; i++) {
@@ -305,54 +312,57 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   var SubFlag = FlagShapes.SubFlag = (function() {
     /* SubFlag. Superclass for flags and rectangular flag bits. */
     // AMENDED. TODO: Complete Restructure.
-    function SubFlag (id) {
-      this.svgnode = newElement('svg', id);
-      this.svgnode.setAttribute('viewBox', '0 0 0 0')
-      this.node = newElement('g', id+"_flag");
-      this.defs = this.svgnode.appendChild(newElement('defs'));
-      this.baseWRect = new WRectangle(0, 0, id+"_baseWRect");
+    function SubFlag (id, halfWidth, halfHeight) {
+      halfWidth = halfWidth || 0;
+      halfHeight = halfHeight || 0;
+
+      this.node = newElement('svg', id);
+      fsvg.svge.setViewExtent.call(this.node,
+        -halfWidth, -halfHeight, halfWidth, halfHeight);
+      this.flag = this.node.appendChild(newElement('g', id+"_flag"));
+      this.defs = this.node.appendChild(newElement('defs'));
+      this.baseWRect = new WRectangle(id+"_baseWRect", halfWidth, halfHeight);
       this.clipWRect = new Clipper(id+"_clipWRect", this.baseWRect);
-      this.setClip(this.clipWRect); // redo this
+      fsvg.genericshape.setClip.call(this.flag, this.clipWRect);
       this.defsAppend(this.clipWRect);
-      this.svgnode.appendChild(this.node);
     }
     var p = SubFlag.prototype = Object.create(GenericShapeProto);
-    makeMethodsWorkOnProperty(p, fsvg.svge, 'node', ['appendObjects']);
+    makeMethodsWorkOnProperty(p, fsvg.svge, 'flag', ['appendObjects']);
     p.setViewHalfWidth = function (halfWidth) {
-      fsvg.svge.setViewHalfWidth.call(this.svgnode, halfWidth);
+      fsvg.svge.setViewHalfWidth.call(this.node, halfWidth);
       this.baseWRect.setHalfWidth(halfWidth);
     }
     p.setViewHalfHeight = function (halfHeight) {
-      fsvg.svge.setViewHalfHeight.call(this.svgnode, halfHeight);
+      fsvg.svge.setViewHalfHeight.call(this.node, halfHeight);
       this.baseWRect.setHalfHeight(halfHeight);
     }
     p.defsAppend = function () {
       fsvg.svge.appendObjects.apply(this.defs, arguments);
-    }
-    p.appendToNode = function () {
-      fsvg.generic.appendToNode.apply(this.svgnode, arguments);
     }
     return SubFlag;
   }());
 
   var UnionJack = FlagShapes.UnionJack = (function() {
     /* The Union Jack. extends SubFlag. */
-    function UnionJack (width, height, id) {
+    function UnionJack (id, width, height) {
+      width = width || 0;
+      height = height || 0;
+      
       // calculate half-lengths
       var halfWidth = width / 2,
           halfHeight = height / 2;
 
       // Set up the svg element.
-      SubFlag.call(this, id);
+      SubFlag.call(this, id, halfWidth, halfHeight);
       // Set up the ViewBox.
       this.setViewHalfWidth(halfWidth);
       this.setViewHalfHeight(halfHeight);
       // create the base shapes.
-      this.baseCross = new Cross(halfWidth, halfHeight, id+"_baseCross");
-      this.baseQRect = new QRectangle(halfWidth, halfHeight, id+"_baseQRect");
-      this.baseQSalt = new SaltireSegment(halfWidth, halfHeight, id+"_baseQSalt");
-      this.QMaskX = new QMaskX(halfWidth, halfHeight, id+"_QMaskX");
-      this.QMaskY = new QMaskY(halfWidth, halfHeight, id+"_QMaskY");
+      this.baseCross = new Cross(id+"_baseCross", halfWidth, halfHeight);
+      this.baseQRect = new QRectangle(id+"_baseQRect", halfWidth, halfHeight);
+      this.baseQSalt = new SaltireSegment(id+"_baseQSalt", halfWidth, halfHeight);
+      this.QMaskX = new QMaskX(id+"_QMaskX", halfWidth, halfHeight);
+      this.QMaskY = new QMaskY(id+"_QMaskY", halfWidth, halfHeight);
 
       this.clipQRect = new Clipper(id+"_clipQRect", this.baseQRect);
       this.clipQMaskX = new Clipper(id+"_clipQMaskX", this.QMaskX);
@@ -368,10 +378,10 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       this.field = this.baseWRect.makeInstance(id+"_field");
       this.georgeFim = this.baseCross.makeInstance(id+"_georgeFim");
       this.george = this.baseCross.makeInstance(id+"_george");
-      this.andrew = new InstanceSaltire(this.baseQSalt,
-        [this.clipQRect], id+"_andrew");
-      this.patrick = new InstanceSaltire(this.baseQSalt,
-        [this.clipQMaskX, this.clipQMaskY], id+"_patrick");
+      this.andrew = new InstanceSaltire(id+"_andrew",
+        this.baseQSalt, [this.clipQRect]);
+      this.patrick = new InstanceSaltire(id+"_patrick",
+        this.baseQSalt, [this.clipQMaskX, this.clipQMaskY]);
 
       this.appendObjects(this.field,
         this.andrew, this.patrick,
