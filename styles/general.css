@@ -1,0 +1,96 @@
+/* Temporary Style. */
+
+/*The Box Sizing Thing*/
+html {
+  box-sizing: border-box;
+}
+*, *:before, *:after {
+  box-sizing: inherit;
+}
+
+/*Temp styles*/
+
+body {
+  font-family: sans-serif;
+}
+
+/*layouting*/
+
+html, body {
+  height: 100%;
+  margin: 0px;
+}
+
+.fullbox {
+  height: 100%;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
+.fullbox-header {
+  background-color: gold;
+}
+
+.fullbox-contents {
+  display: flex;
+  flex-flow: row nowrap;
+  flex: auto;
+  min-height: 0px;
+
+}
+
+.fullbox-mainpane {
+  flex: auto;
+  background-color: lightgrey;
+  padding: 1em;
+}
+
+.fullbox-sidebar {
+  flex: none;
+  min-height: 0px;
+  overflow-y: scroll;
+  padding: 1em;
+  background-color: beige;
+}
+
+#main_svg_object {
+  width: 100%;
+  height: 100%;
+}
+
+/* CONTROLS ! */
+
+input[type=range] {
+  /*workaround for strange issue*/
+  background-color: unset;
+}
+
+input[type=number] {
+  min-width: 1em;
+  max-width: 4.2em;
+  /*margin: 1em;*/
+}
+
+input {
+  height: 2em;
+}
+
+
+.controlset {
+  max-width: 35em;
+}
+
+.control {
+  display: flex;
+  background-color: pink;
+  margin: 0.2em;
+  height: 3em;
+  align-items: center;
+  padding: 0.5em;
+}
+
+.control label {
+  padding-right: 0.5em;
+  min-width: 8em;
+  text-align: right;
+}

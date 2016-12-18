@@ -3,129 +3,11 @@
  <head>
 	<meta charset='utf-8'>
 	<title> Union Jack </title>
-    <!--
-	<link rel="stylesheet" href="">
-	<script src=""></script>
-    -->
+    <link rel="stylesheet" href="styles/general.css">
 
     <script src="scripts/fsvg.js"></script>
     <script src="scripts/flagshapes.js"></script>
     <script src="scripts/fcontrols.js"></script>
-
-    <!-- Temporary style. -->
-    <style>
-      /*The Box Sizing Thing*/
-      html {
-        box-sizing: border-box;
-      }
-      *, *:before, *:after {
-        box-sizing: inherit;
-      }
-
-      /*Temp styles*/
-
-      body {
-        font-family: sans-serif;
-      }
-
-      /*layouting*/
-
-      html, body {
-        height: 100%;
-        margin: 0px;
-      }
-
-      .fullbox {
-        height: 100%;
-        display: flex;
-        flex-flow: column nowrap;
-      }
-
-      .fullbox-header {
-        background-color: gold;
-      }
-
-      .fullbox-contents {
-        display: flex;
-        flex-flow: row nowrap;
-        flex: auto;
-        min-height: 0px;
-
-      }
-
-      .fullbox-mainpane {
-        flex: auto;
-        background-color: lightgrey;
-        padding: 1em;
-      }
-
-      .fullbox-sidebar {
-        flex: none;
-        min-height: 0px;
-        overflow-y: scroll;
-        padding: 1em;
-        background-color: beige;
-      }
-
-      #main_svg_object {
-        width: 100%;
-        height: 100%;
-      }
-
-
-
-
-      /*controls*/
-      input[type=range] {
-        /*workaround for strange issue*/
-        background-color: unset;
-      }
-
-      input[type=number] {
-        min-width: 1em;
-        max-width: 4.2em;
-        /*margin: 1em;*/
-      }
-
-      input {
-        height: 2em;
-      }
-
-      /*input[type=color]{
-        background-color: black;
-        padding: 0px;
-      }*/
-
-
-      .controlset {
-        max-width: 35em;
-      }
-      /*.controlset legend {
-        border: solid 1px ;
-        border-radius: 2em;
-        padding-left: 1em;
-        padding-right: 1em;
-      }*/
-      .controlbox {
-        display: flex;
-        background-color: pink;
-        margin: 0.2em;
-        height: 3em;
-        align-items: center;
-        padding: 0.5em;
-      }
-
-      .controlbox label {
-        padding-right: 0.5em;
-      }
-
-      .rangeful label, .colours label, .checkbox label {
-        min-width: 8em;
-        text-align: right;
-      }
-
-    </style>
-
  </head>
  <body class="fullbox">
    <header class="fullbox-header">
@@ -138,7 +20,39 @@
        xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
      </div>
      <div class="fullbox-sidebar">
-       <div id="flag-controls" class="controls"></div>
+       <div id="flag-controls" class="controls">
+         <!-- Back To The Future Part III -->
+         <fieldset id="presets" class="controlset">
+           <legend> Presets </legend>
+           <div id="preset-default" class="control" data-type="button"></div>
+           <div id="preset-civil" class="control" data-type="button"></div>
+           <div id="preset-army" class="control" data-type="button"></div>
+         </fieldset>
+         <fieldset id="dimensions" class="controlset">
+           <legend> Dimensions </legend>
+           <div id="fly" class="control" data-type="rangeful"></div>
+           <div id="hoist" class="control" data-type="rangeful"></div>
+         </fieldset>
+         <fieldset id="saltire" class="controlset" >
+           <legend> Saltire </legend>
+           <div id="patrick" class="control" data-type="checkbox"></div>
+           <div id="inverted" class="control" data-type="checkbox"></div>
+           <div id="salt-width" class="control" data-type="rangeful"></div>
+           <div id="salt-fim" class="control" data-type="rangeful"></div>
+           <div id="salt-offset" class="control" data-type="rangeful"></div>
+         </fieldset>
+         <fieldset id="cross" class="controlset">
+           <legend> Cross </legend>
+           <div id="cross-width" class="control" data-type="rangeful"></div>
+           <div id="cross-fim" class="control" data-type="rangeful"></div>
+         </fieldset>
+         <fieldset id="colours" class="controlset">
+           <legend> Colours </legend>
+           <div id="blue" class="control" data-type="colours"></div>
+           <div id="white" class="control" data-type="colours"></div>
+           <div id="red" class="control" data-type="colours"></div>
+         </fieldset>
+       </div>
      </div>
    </div>
  <script>
@@ -157,97 +71,130 @@
           controls['cross-width'].setMax(x);
           controls['cross-fim'].setMax(hx);
           controls['salt-width'].setMax(x);
-          controls['salt-width'].setMin(-x);
           controls['salt-fim'].setMax(hx);
       }
 
+      var mass_valset = function (controls, params) {
+        Object.keys(params).forEach(function (control) {
+          controls[control].setValue(params[control]);
+        });
+      }
 
-      // The Great Inputtering
-      window.cc = fcontrols.attachControls(document.getElementById('flag-controls'), [
-        new fcontrols.Controlset('dimensions', 'Dimensions', [
-          new fcontrols.Rangeful('fly', {
-            label: 'Fly', value: 60,
-            min: 1, max: 100, step: 1,
-            onValue: function (self) {
-              uu.setWidth(self.value);
-              sensible_ranges(self.controls);
-            }
-          }),
-          new fcontrols.Rangeful('hoist', {
-            label: 'Hoist', value: 30,
-            min: 1, max: 100, step: 1,
-            onValue: function (self) {
-              uu.setHeight(self.value);
-              sensible_ranges(self.controls);
-            }
-          })
-        ]),
-        new fcontrols.Controlset('saltire', 'Saltire', [
-          new fcontrols.Checkbox('patrick', {
-            label: 'Patrick', value: true,
-            onValue: function (self) {
-              uu.setPatrickVisibility(self.value);
-            }
-          }),
-          new fcontrols.Rangeful('salt-width', {
-            label: 'Width', value: 4,
-            min: -50, max: 50, step: 1,
-            onValue: function (self) {
-              uu.setSaltireThickness(self.value);
-            }
-          }),
-          new fcontrols.Rangeful('salt-fim', {
-            label: 'Fimbriation', value: 1,
-            min: 0, max: 25, step: 1,
-            onValue: function (self) {
-              uu.setSaltireFim(self.value);
-            }
-          }),
-          new fcontrols.Rangeful('salt-offset', {
-            label: 'Offset', value: 0,
-            min: -1, max: 1, step: 0.01,
-            onValue: function (self) {
-              uu.setOffset(self.value);
-            }
-          })
-        ]),
-        new fcontrols.Controlset('cross', 'Cross', [
-          new fcontrols.Rangeful('cross-width', {
-            label: 'Width', value: 6,
-            min: 0, max: 50, step: 1,
-            onValue: function (self) {
-              uu.setCrossThickness(self.value);
-            }
-          }),
-          new fcontrols.Rangeful('cross-fim', {
-            label: 'Fimbriation', value: 2,
-            min: 0, max: 25, step: 1,
-            onValue: function (self) {
-              uu.setCrossFim(self.value);
-            }
-          })
-        ]),
-        new fcontrols.Controlset('colours', 'Colours', [
-          new fcontrols.Colours('blue', {
-            label: 'Blue', value: '#000080',
-            onValue: function (self) {
-              uu.setBlue(self.value);
-            }
-          }),
-          new fcontrols.Colours('white', {
-            label: 'White', value: '#ffffff',
-            onValue: function (self) {
-              uu.setWhite(self.value);
-            }
-          }),
-          new fcontrols.Colours('red', {
-            label: 'Red', value: '#ff0000',
-            onValue: function (self) {
-              uu.setRed(self.value);
-            }
-          })
-        ])
-      ])
+      var defaultParams = {
+        'fly': 60, 'hoist': 30,
+        'patrick': true, 'inverted': false,
+        'salt-width': 4, 'salt-fim': 1, 'salt-offset': 0,
+        'cross-width': 6, 'cross-fim': 2,
+        'blue': '#000080', 'white': '#ffffff', 'red': '#ff0000'
+      }
+
+
+      window.cc = fcontrols.registerControls('flag-controls', {
+        'preset-default': {
+          label: 'reset all',
+          onAction: function (self) {
+            mass_valset(self.controls, defaultParams);
+          }
+        },
+        'preset-army': {
+          label: 'army ratio',
+          onAction: function (self) {
+            mass_valset(self.controls, {
+              'fly': 50, 'hoist': 30,
+              'patrick': true, 'inverted': false,
+              'salt-width': 4, 'salt-fim': 1, 'salt-offset': 0,
+              'cross-width': 6, 'cross-fim': 2,
+            });
+          }
+        },
+        'preset-civil': {
+          label: 'normal ratio',
+          onAction: function (self) {
+            mass_valset(self.controls, {
+              'fly': 60, 'hoist': 30,
+              'patrick': true, 'inverted': false,
+              'salt-width': 4, 'salt-fim': 1, 'salt-offset': 0,
+              'cross-width': 6, 'cross-fim': 2,
+            });
+          }
+        },
+        'fly': {
+          label: 'Fly', value: 60, min: 1, max: 100, step: 1,
+          onValue: function (self) {
+            uu.setWidth(self.value);
+            sensible_ranges(self.controls);
+          }
+        },
+        'hoist': {
+          label: 'Hoist', value: 30, min: 1, max: 100, step: 1,
+          onValue: function (self) {
+            uu.setHeight(self.value);
+            sensible_ranges(self.controls);
+          }
+        },
+        'patrick': {
+          label: 'Patrick', value: true,
+          onValue: function (self) {
+            uu.setPatrickVisibility(self.value);
+          }
+        },
+        'inverted': {
+          label: 'Inverted', value: false,
+          onValue: function (self) {
+            uu.setInverted(self.value);
+          }
+        },
+        'salt-width': {
+          label: 'Width', value: 4, min: 0, step: 1,
+          onValue: function (self) {
+            uu.setSaltireThickness(self.value);
+          }
+        },
+        'salt-fim': {
+          label: 'Fimbriation', value: 1, min: 0, step: 1,
+          onValue: function (self) {
+            uu.setSaltireFim(self.value);
+          }
+        },
+        'salt-offset': {
+          label: 'Offset', value: 0, min: -1, max: 1, step: 0.01,
+          onValue: function (self) {
+            uu.setOffset(self.value);
+          }
+        },
+        'cross-width': {
+          label: 'Width', value: 6, min: 0, step: 1,
+          onValue: function (self) {
+            uu.setCrossThickness(self.value);
+          }
+        },
+        'cross-fim': {
+          label: 'Fimbriation', value: 2, min: 0, step: 1,
+          onValue: function (self) {
+            uu.setCrossFim(self.value);
+          }
+        },
+        'blue': {
+          label: 'Blue', value: '#000080',
+          onValue: function (self) {
+            uu.setBlue(self.value);
+          }
+        },
+        'white': {
+          label: 'White', value: '#ffffff',
+          onValue: function (self) {
+            uu.setWhite(self.value);
+          }
+        },
+        'red': {
+          label: 'Red', value: '#ff0000',
+          onValue: function (self) {
+            uu.setRed(self.value);
+          }
+        }
+
+      });
+
     }
   </script>
  </body>

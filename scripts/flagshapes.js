@@ -312,16 +312,16 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   var SubFlag = FlagShapes.SubFlag = (function() {
     /* SubFlag. Superclass for flags and rectangular flag bits. */
     // AMENDED. TODO: Complete Restructure.
-    function SubFlag (id, halfWidth, halfHeight) {
-      halfWidth = halfWidth || 0;
-      halfHeight = halfHeight || 0;
+    function SubFlag (id, viewHalfWidth, viewHalfHeight) {
+      viewHalfWidth = viewHalfWidth || 0;
+      viewHalfHeight = viewHalfHeight || 0;
 
       this.node = newElement('svg', id);
       fsvg.svge.setViewExtent.call(this.node,
-        -halfWidth, -halfHeight, halfWidth, halfHeight);
+        -viewHalfWidth, -viewHalfHeight, viewHalfWidth, viewHalfHeight);
       this.flag = this.node.appendChild(newElement('g', id+"_flag"));
       this.defs = this.node.appendChild(newElement('defs'));
-      this.baseWRect = new WRectangle(id+"_baseWRect", halfWidth, halfHeight);
+      this.baseWRect = new WRectangle(id+"_baseWRect", viewHalfWidth, viewHalfHeight);
       this.clipWRect = new Clipper(id+"_clipWRect", this.baseWRect);
       fsvg.genericshape.setClip.call(this.flag, this.clipWRect);
       this.defsAppend(this.clipWRect);
@@ -347,7 +347,7 @@ var FlagShapes = (function(FlagShapes, fsvg) {
     function UnionJack (id, width, height) {
       width = width || 0;
       height = height || 0;
-      
+
       // calculate half-lengths
       var halfWidth = width / 2,
           halfHeight = height / 2;
@@ -453,19 +453,24 @@ var FlagShapes = (function(FlagShapes, fsvg) {
       var tw = Math.max(f, 0)*2 + w;
       this.andrew.setThickness(tw);
     }
+    // p.setSaltireThickness = function (w) {
+    //   this.saltireThickness = w;
+    //   var isnegative = (w < 0);
+    //   if (isnegative !== this.inverted) {
+    //     this.setInverted(isnegative);
+    //   }
+    //   var aw = Math.abs(w);
+    //   _setSaltireThickness.call(this, aw);
+    //   _setSaltireFim.call(this, aw, this.saltireFim);
+    // }
     p.setSaltireThickness = function (w) {
       this.saltireThickness = w;
-      var isnegative = (w < 0);
-      if (isnegative !== this.inverted) {
-        this.setInverted(isnegative);
-      }
-      var aw = Math.abs(w);
-      _setSaltireThickness.call(this, aw);
-      _setSaltireFim.call(this, aw, this.saltireFim);
+      _setSaltireThickness.call(this, w);
+      _setSaltireFim.call(this, w, this.saltireFim);
     }
     p.setSaltireFim = function (f) {
       this.saltireFim = f;
-      _setSaltireFim.call(this, Math.abs(this.saltireThickness), f);
+      _setSaltireFim.call(this, this.saltireThickness, f);
     }
     p.setInverted = function (b) {
       b = !!b;
