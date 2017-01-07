@@ -29,6 +29,8 @@ html, body {
 
 .fullbox-header {
   background-color: gold;
+  padding: 0.2em;
+  padding-left: 1em;
 }
 
 .fullbox-contents {
@@ -77,7 +79,15 @@ input {
 
 
 .controlset {
-  max-width: 35em;
+  display: flex;
+  flex-flow: row wrap;
+  min-width: 10em;
+  max-width: 25em;
+}
+
+.horizontal {
+  display: flex;
+  flex-flow: row wrap;
 }
 
 .control {
@@ -87,10 +97,30 @@ input {
   height: 3em;
   align-items: center;
   padding: 0.5em;
+  flex: 1 1 auto;
+}
+
+.control[data-type=button] {
+
+  padding: 0.25em;
+  height: auto;
+
+}
+
+.control[data-type=button] button {
+  flex: 1 1 auto;
+}
+
+.control[data-type=checkbox] {
+
+}
+
+.control[data-type=rangeful] input {
+  flex: 1 1 auto;
 }
 
 .control label {
   padding-right: 0.5em;
-  min-width: 8em;
+  min-width: 7em;
   text-align: right;
 }
