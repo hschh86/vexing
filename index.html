@@ -1,15 +1,38 @@
 <!DOCTYPE html>
-<html>
- <head>
-	<meta charset='utf-8'>
-	<title>TITLE</title>
-    <!--
-	<link rel="stylesheet" href="">
-	<script src=""></script>
-    -->
- </head>
- <body>
- <!-- Content goes here. -->
-     <h1> TITLE </h1>
- </body>
+<html lang="en">
+<head>
+  <meta charset='utf-8'>
+  <title> vexing index </title>
+  <link rel="stylesheet" href="styles/general.css">
+
+  <script src="scripts/fsvg.js"></script>
+  <script src="scripts/flagshapes.js"></script>
+  <script src="scripts/fcontrols.js"></script>
+</head>
+<body class="fullbox">
+  <header class="fullbox-header">
+    test zone
+  </header>
+  <div class="fullbox-contents">
+    <div class="fullbox-mainpane">
+      <svg id="main_svg_object"
+      xmlns="http://www.w3.org/2000/svg"
+      xmlns:xlink="http://www.w3.org/1999/xlink"></svg>
+    </div>
+    <div class="fullbox-sidebar">
+    </div>
+  </div>
+  <script>
+  window.onload = function () {
+    'use strict';
+    window.msvg = document.getElementById('main_svg_object');
+    window.ff = new FlagShapes.SubFlag('area', 10, 10);
+    ff.appendToNode(msvg);
+
+    window.star = new FlagShapes.Star('test', 5, 2, 4);
+    ff.appendObjects(star)
+
+  }
+  </script>
+</body>
 </html>

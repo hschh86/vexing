@@ -496,5 +496,86 @@ var FlagShapes = (function(FlagShapes, fsvg) {
   }());
 
 
+  var pointmaths = FlagShapes.pointmaths = (function() {
+    var unitcircle = function (n, start) {
+      // returns some points around the unit circle
+      start = start || 0;
+      var angle = 2*Math.PI / n;
+      var list = [];
+      var a = start;
+      for (var i=0; i < n; i++) {
+        list.push([Math.sin(a), -Math.cos(a)]);
+        a += angle;
+      }
+      return list;
+    }
+    var scalarmult = function (scalar, arr) {
+      return arr.map(function (e) {
+        return scalar*e
+      })
+    }
+    return ({
+      unitcircle: unitcircle,
+      scalarmult: scalarmult,
+    });
+  }());
+
+  // I have no idea what I'm doing
+  var Star = FlagShapes.Star = (function() {
+    /* A Star polygon. */
+    function Star (id, degree, innerRadius, outerRadius) {
+      degree = degree || 5;
+      innerRadius = innerRadius || 0;
+      outerRadius = outerRadius || 0;
+
+      this.degree = degree;
+      this.innerRadius = innerRadius;
+      this.outerRadius = outerRadius;
+      this.node = newElement('polygon', id);
+
+      this.setDegree(this.degree);
+    }
+    var p = Star.prototype = Object.create(GenericShapeProto);
+    p.setDegree = function (degree) {
+      this.base_outpoints = pointmaths.unitcircle(degree);
+      this.base_inpoints = pointmaths.unitcircle(degree, Math.PI/degree);
+      var outpoints = this.base_outpoints.map(
+        partialone(pointmaths.scalarmult, this.outerRadius));
+      var inpoints = this.base_inpoints.map(
+        partialone(pointmaths.scalarmult, this.innerRadius));
+      var points = [];
+      // Build the list of points.
+      for (var i=0; i<degree; i++) {
+        points.push(outpoints[i]);
+        points.push(inpoints[i]);
+      }
+      // DOM time
+      fsvg.poly.setByString.call(this.node, points);
+      this.points = fsvg.poly.getPoints.call(this.node);
+      this.outpoints = [];
+      this.inpoints = [];
+      for (var i=0; i<2*degree; i+=2) {
+        this.outpoints.push(this.points[i]);
+        this.inpoints.push(this.points[i+1]);
+      }
+    }
+    p.setInnerRadius = function (radius) {
+      this.innerRadius = radius;
+      for (var i=0; i<this.inpoints.length; i++) {
+        var loc = pointmaths.scalarmult(radius, this.base_inpoints[i]);
+        fsvg.point.setLocation.apply(this.inpoints[i], loc);
+      }
+    }
+    p.setOuterRadius = function (radius) {
+      this.outerRadius = radius;
+      for (var i=0; i<this.outpoints.length; i++) {
+        var loc = pointmaths.scalarmult(radius, this.base_outpoints[i]);
+        fsvg.point.setLocation.apply(this.outpoints[i], loc);
+      }
+    }
+
+    return Star;
+  }());
+
   return FlagShapes;
 }(FlagShapes || {}, fsvg));

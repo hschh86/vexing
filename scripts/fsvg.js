@@ -260,6 +260,16 @@ var fsvg = (function(fsvg) {
     return freeze(poly);
   }());
 
+  var point = fsvg.point = (function() {
+    // for SVG POINT
+    var point = {};
+    point.setLocation = function (x, y) {
+        this.x = x;
+        this.y = y;
+    }
+    return freeze(point);
+  }());
+
   var group = fsvg.group = (function() {
     var group = {};
     //extend(group, basicSetters);
